@@ -50,7 +50,7 @@
             this.deletionLabel.Name = "deletionLabel";
             this.deletionLabel.Size = new System.Drawing.Size(285, 13);
             this.deletionLabel.TabIndex = 4;
-            this.deletionLabel.Text = "You are about to delete the API key with ID : {0}.";
+            this.deletionLabel.Text = "You are about to remove the EVE SSO authorization of {0}.";
             this.deletionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // cancelButton
@@ -107,8 +107,8 @@
             this.infoLabel.Name = "infoLabel";
             this.infoLabel.Size = new System.Drawing.Size(296, 48);
             this.infoLabel.TabIndex = 6;
-            this.infoLabel.Text = "If you choose to leave your characters, they will be displayed as cached and auto" +
-                "matically reconnected once they\'re found on another one of your API keys.";
+            this.infoLabel.Text = "If you keep the character, it will be displayed as cached until you authorize it" +
+                " again.";
             // 
             // deleteWarningLabel
             // 
@@ -130,7 +130,7 @@
             this.charactersListGroupBox.Size = new System.Drawing.Size(495, 114);
             this.charactersListGroupBox.TabIndex = 8;
             this.charactersListGroupBox.TabStop = false;
-            this.charactersListGroupBox.Text = "Select the characters you want to remove";
+            this.charactersListGroupBox.Text = "Check the character to delete it too";
             // 
             // ApiKeyDeletionWindow
             // 
@@ -147,7 +147,7 @@
             this.Controls.Add(this.cancelButton);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Name = "ApiKeyDeletionWindow";
-            this.Text = "Delete an API key";
+            this.Text = "Remove Authorization";
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
             this.charactersListGroupBox.ResumeLayout(false);
             this.ResumeLayout(false);

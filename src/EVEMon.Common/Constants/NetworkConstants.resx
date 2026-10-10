@@ -501,9 +501,6 @@
   <data name="EVEMonTwitter" xml:space="preserve">
     <value>https://twitter.com/evemon</value>
   </data>
-  <data name="GoogleAnalyticsUrl" xml:space="preserve">
-    <value>https://ssl.google-analytics.com/collect</value>
-  </data>
   <data name="EVEMarketDataAPIItemPrices" xml:space="preserve">
     <value>/api/item_prices2.xml?char_name=evemon&amp;buysell=a</value>
   </data>

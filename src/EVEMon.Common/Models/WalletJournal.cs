@@ -10,6 +10,7 @@ namespace EVEMon.Common.Models
     {
         private readonly long m_taxReceiverID;
         private readonly int m_refTypeID;
+        private readonly string m_refTypeName;
         private string m_taxReceiver;
         private string m_refType;
 
@@ -37,7 +38,8 @@ namespace EVEMon.Common.Models
             TaxAmount = src.TaxAmount;
 
             Reason = ParseReason(src.Reason);
-            m_refType = EveRefType.GetRefTypeIDToName(src.RefTypeID);
+            m_refTypeName = src.RefTypeName;
+            m_refType = String.IsNullOrEmpty(m_refTypeName) ? EveRefType.GetRefTypeIDToName(src.RefTypeID) : m_refTypeName;
             m_taxReceiver = GetTaxReceiver();
         }
 
@@ -89,7 +91,7 @@ namespace EVEMon.Common.Models
         /// <summary>
         /// Gets the type.
         /// </summary>
-        public string Type => m_refType == EveMonConstants.UnknownText
+        public string Type => m_refType == EveMonConstants.UnknownText && String.IsNullOrEmpty(m_refTypeName)
             ? m_refType = EveRefType.GetRefTypeIDToName(m_refTypeID)
             : m_refType;
 

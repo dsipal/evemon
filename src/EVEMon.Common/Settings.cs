@@ -235,7 +235,7 @@ namespace EVEMon.Common
 
             EveMonClient.ResetCollections();
             EveMonClient.Characters.Import(s_settings.Characters);
-            EveMonClient.APIKeys.Import(s_settings.APIKeys);
+            EveMonClient.ESIKeys.Import(s_settings.ESIKeys);
             EveMonClient.Characters.ImportPlans(s_settings.Plans);
             EveMonClient.MonitoredCharacters.Import(s_settings.MonitoredCharacters);
 
@@ -264,11 +264,6 @@ namespace EVEMon.Common
                 .Where(method => !Updates.Periods.ContainsKey(method.ToString())))
             {
                 Updates.Periods.Add(method.ToString(), method.GetUpdatePeriod().DefaultPeriod);
-
-                // Bind the APIKeyInfo and CharacterList update period
-                if (method.Equals(CCPAPIGenericMethods.APIKeyInfo) &&
-                    Updates.Periods[CCPAPIGenericMethods.CharacterList.ToString()] != Updates.Periods[method.ToString()])
-                    Updates.Periods[method.ToString()] = Updates.Periods[CCPAPIGenericMethods.CharacterList.ToString()];
             }
 
             // Initialize or add missing columns
@@ -365,7 +360,7 @@ namespace EVEMon.Common
             };
 
             serial.Characters.AddRange(EveMonClient.Characters.Export());
-            serial.APIKeys.AddRange(EveMonClient.APIKeys.Export());
+            serial.ESIKeys.AddRange(EveMonClient.ESIKeys.Export());
             serial.Plans.AddRange(EveMonClient.Characters.ExportPlans());
             serial.MonitoredCharacters.AddRange(EveMonClient.MonitoredCharacters.Export());
 

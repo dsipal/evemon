@@ -53,12 +53,12 @@ namespace IO.Swagger.Client
         public ApiClient()
         {
             Configuration = IO.Swagger.Client.Configuration.Default;
-            RestClient = new RestClient("https://esi.tech.ccp.is");
+            RestClient = new RestClient("https://esi.evetech.net");
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiClient" /> class
-        /// with default base path (https://esi.tech.ccp.is).
+        /// with default base path (https://esi.evetech.net).
         /// </summary>
         /// <param name="config">An instance of Configuration.</param>
         public ApiClient(Configuration config)
@@ -73,7 +73,7 @@ namespace IO.Swagger.Client
         /// with default configuration.
         /// </summary>
         /// <param name="basePath">The base path.</param>
-        public ApiClient(String basePath = "https://esi.tech.ccp.is")
+        public ApiClient(String basePath = "https://esi.evetech.net")
         {
            if (String.IsNullOrEmpty(basePath))
                 throw new ArgumentException("basePath cannot be empty");
@@ -134,7 +134,7 @@ namespace IO.Swagger.Client
             // add file parameter, if any
             foreach(var param in fileParams)
             {
-                request.AddFile(param.Value.Name, param.Value.Writer, param.Value.FileName, param.Value.ContentType);
+                request.AddFile(param.Value.Name, param.Value.Writer, param.Value.FileName, param.Value.ContentLength, param.Value.ContentType);
             }
 
             if (postBody != null) // http body (model or byte[]) parameter
@@ -210,7 +210,7 @@ namespace IO.Swagger.Client
                 path, method, queryParams, postBody, headerParams, formParams, fileParams,
                 pathParams, contentType);
             InterceptRequest(request);
-            var response = await RestClient.ExecuteTaskAsync(request);
+            var response = await RestClient.ExecuteAsync(request);
             InterceptResponse(request, response);
             return (Object)response;
         }

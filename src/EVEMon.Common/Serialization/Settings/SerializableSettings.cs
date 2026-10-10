@@ -12,14 +12,14 @@ namespace EVEMon.Common.Serialization.Settings
     public sealed class SerializableSettings
     {
         private readonly Collection<SerializablePlan> m_plans;
-        private readonly Collection<SerializableAPIKey> m_apiKeys;
+        private readonly Collection<SerializableESIKey> m_esiKeys;
         private readonly Collection<SerializableSettingsCharacter> m_characters;
         private readonly Collection<MonitoredCharacterSettings> m_monitoredCharacters;
 
         public SerializableSettings()
         {
             m_plans = new Collection<SerializablePlan>();
-            m_apiKeys = new Collection<SerializableAPIKey>();
+            m_esiKeys = new Collection<SerializableESIKey>();
             m_characters = new Collection<SerializableSettingsCharacter>();
             m_monitoredCharacters = new Collection<MonitoredCharacterSettings>();
             CloudStorageServiceProvider = new CloudStorageServiceProviderSettings();
@@ -43,9 +43,9 @@ namespace EVEMon.Common.Serialization.Settings
         [XmlElement("compatibility")]
         public CompatibilityMode Compatibility { get; set; }
 
-        [XmlArray("apiKeys")]
-        [XmlArrayItem("apikey")]
-        public Collection<SerializableAPIKey> APIKeys => m_apiKeys;
+        [XmlArray("esiKeys")]
+        [XmlArrayItem("esiKey")]
+        public Collection<SerializableESIKey> ESIKeys => m_esiKeys;
 
         [XmlArray("characters")]
         [XmlArrayItem("ccp", typeof(SerializableCCPCharacter))]

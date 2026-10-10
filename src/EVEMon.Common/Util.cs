@@ -12,7 +12,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Xml.XPath;
@@ -44,7 +43,8 @@ namespace EVEMon.Common
 
             try
             {
-                Process.Start(url.AbsoluteUri);
+                // .NET Core no longer defaults to the shell, which is what resolves the default browser
+                Process.Start(new ProcessStartInfo(url.AbsoluteUri) { UseShellExecute = true });
             }
             catch (FileNotFoundException ex)
             {
@@ -522,9 +522,9 @@ namespace EVEMon.Common
                 try
                 {
                     // Deserialize
-                    result = new JavaScriptSerializer().Deserialize<T>(asyncResult.Result);
+                    result = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(asyncResult.Result);
                 }
-                catch (ArgumentException exc)
+                catch (Newtonsoft.Json.JsonException exc)
                 {
                     // An error occurred during the deserialization
                     ExceptionHandler.LogException(exc, true);
@@ -997,8 +997,7 @@ namespace EVEMon.Common
         /// <returns></returns>
         public static T DeserializeJsonToObject<T>(string value)
         {
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            return serializer.Deserialize<T>(value);
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(value);
         }
 
         /// <summary>
@@ -1008,8 +1007,7 @@ namespace EVEMon.Common
         /// <returns></returns>
         public static string SerializeObjectToJson(object obj)
         {
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            return serializer.Serialize(obj);
+            return Newtonsoft.Json.JsonConvert.SerializeObject(obj);
         }
 
         /// <summary>

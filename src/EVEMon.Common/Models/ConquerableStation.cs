@@ -98,10 +98,8 @@ namespace EVEMon.Common.Models
             if (fileUpToDate)
                 return;
 
-            s_queryPending = true;
-
-            EveMonClient.APIProviders.CurrentProvider
-                .QueryMethodAsync<SerializableAPIConquerableStationList>(CCPAPIGenericMethods.ConquerableStationList, OnUpdated);
+            // Outposts were removed from EVE in 2018 and the XML API that listed them is retired,
+            // so only an already cached list is used
         }
 
         /// <summary>

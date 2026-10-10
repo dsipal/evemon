@@ -1221,14 +1221,6 @@ namespace EVEMon.Common.Constants {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized string similar to https://ssl.google-analytics.com/collect.
-        /// </summary>
-        public static string GoogleAnalyticsUrl {
-            get {
-                return ResourceManager.GetString("GoogleAnalyticsUrl", resourceCulture);
-            }
-        }
         
         /// <summary>
         ///   Looks up a localized string similar to /bitmaps/character/level.

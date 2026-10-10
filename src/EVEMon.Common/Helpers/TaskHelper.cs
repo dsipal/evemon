@@ -13,44 +13,12 @@ namespace EVEMon.Common.Helpers
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <remarks>
-        /// This methods purpose is to help developers understand
-        /// the concept of running IO bound task using <![CDATA[TaskCompletionSource<T>()]]>
-        /// See more at: https://msdn.microsoft.com/en-us/library/hh873177.aspx
+        /// This used to wrap <c>Delegate.BeginInvoke</c>, which is not supported on .NET Core;
+        /// running the action on the thread pool keeps the same behaviour.
         /// </remarks>
         public static Task RunIOBoundTaskAsync(Action action,
             CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var tcs = new TaskCompletionSource<object>();
-
-            try
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    return Task.Factory.FromAsync(action.BeginInvoke,
-                        result =>
-                        {
-                            try
-                            {
-                                action.EndInvoke(result);
-                                tcs.TrySetResult(default(object));
-                            }
-                            catch (Exception exc)
-                            {
-                                tcs.TrySetException(exc);
-                            }
-                        }, null);
-                }
-
-                tcs.TrySetCanceled(cancellationToken);
-                return tcs.Task;
-            }
-            catch (Exception exc)
-            {
-                tcs.TrySetException(exc);
-            }
-
-            return tcs.Task;
-        }
+            => Task.Run(action, cancellationToken);
 
         /// <summary>
         /// Runs the IO bound function asynchronously.
@@ -75,38 +43,12 @@ namespace EVEMon.Common.Helpers
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <remarks>
-        /// This methods purpose is to help developers understand
-        /// the concept of running IO bound task using <![CDATA[TaskCompletionSource<T>()]]>
-        /// See more at: https://msdn.microsoft.com/en-us/library/hh873177.aspx
+        /// This used to wrap <c>Delegate.BeginInvoke</c>, which is not supported on .NET Core;
+        /// running the function on the thread pool keeps the same behaviour.
         /// </remarks>
         public static Task<TResult> RunIOBoundTaskAsync<TResult>(Func<TResult> function,
             CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var tcs = new TaskCompletionSource<TResult>();
-
-            try
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    return Task.Factory.FromAsync(function.BeginInvoke,
-                        asyncResult =>
-                        {
-                            TResult tResult = function.EndInvoke(asyncResult);
-                            tcs.TrySetResult(tResult);
-                            return tResult;
-                        }, null);
-                }
-
-                tcs.TrySetCanceled(cancellationToken);
-                return tcs.Task;
-            }
-            catch (Exception exc)
-            {
-                tcs.TrySetException(exc);
-            }
-
-            return tcs.Task;
-        }
+            => Task.Run(function, cancellationToken);
 
         /// <summary>
         /// Runs the IO bound function asynchronously.

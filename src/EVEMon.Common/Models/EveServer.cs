@@ -1,41 +1,43 @@
 using System;
+using System.Net;
+using System.Threading.Tasks;
 using EVEMon.Common.Enumerations;
 using EVEMon.Common.Enumerations.CCPAPI;
-using EVEMon.Common.Interfaces;
-using EVEMon.Common.QueryMonitor;
+using EVEMon.Common.Enumerations.UISettings;
+using EVEMon.Common.Net;
+using EVEMon.Common.Serialization.Esi;
 using EVEMon.Common.Serialization.Eve;
+using EVEMon.Common.SettingsObjects;
 
 namespace EVEMon.Common.Models
 {
     /// <summary>
     /// Represents the status of a server
     /// </summary>
+    /// <remarks>
+    /// The status is read from the ESI <c>/status/</c> endpoint, which replaced the retired
+    /// XML API <c>/server/ServerStatus.xml.aspx</c>.
+    /// </remarks>
     public sealed class EveServer
     {
+        private const string Name = "Tranquility";
+        private static readonly Uri s_statusUrl = new Uri("https://esi.evetech.net/latest/status/?datasource=tranquility");
+
         private int m_users;
         private ServerStatus m_status;
-        private readonly QueryMonitor<SerializableAPIServerStatus> m_serverStatusMonitor;
         private DateTime m_serverDateTime = DateTime.UtcNow;
+        private DateTime m_nextUpdate = DateTime.MinValue;
+        private bool m_isUpdating;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         internal EveServer()
         {
-            m_status = ServerStatus.Online;
-
-            m_serverStatusMonitor = new QueryMonitor<SerializableAPIServerStatus>(CCPAPIGenericMethods.ServerStatus,
-                                                                                  OnServerStatusMonitorUpdated) { Enabled = true };
+            m_status = ServerStatus.Unknown;
 
             EveMonClient.TimerTick += EveMonClient_TimerTick;
         }
-
-        /// <summary>
-        /// Gets the server's name.
-        /// </summary>
-        private static string Name => EveMonClient.APIProviders.CurrentProvider.Url.Host != APIProvider.TestProvider.Url.Host
-            ? "Tranquility"
-            : "Sinqularity";
 
         /// <summary>
         /// Gets the server status message.
@@ -64,57 +66,11 @@ namespace EVEMon.Common.Models
         public DateTime ServerDateTime => m_serverDateTime;
 
         /// <summary>
-        /// Forces an update of the server status.
+        /// Forces an update of the server status (on the next timer tick).
         /// </summary>
         public void ForceUpdate()
         {
-            ((IQueryMonitorEx)m_serverStatusMonitor).ForceUpdate();
-        }
-
-        /// <summary>
-        /// Occurs when CCP returns new data.
-        /// </summary>
-        /// <param name="result"></param>
-        private void OnServerStatusMonitorUpdated(CCPAPIResult<SerializableAPIServerStatus> result)
-        {
-            ServerStatus lastStatus = m_status;
-
-            // Update the server date and time (in case of API server total failure use UTC time)
-            m_serverDateTime = result.CurrentTime != DateTime.MinValue ? result.CurrentTime : DateTime.UtcNow;
-
-            // Checks if EVE database is out of service
-            if (result.EVEDatabaseError)
-                return;
-
-            // Was there an error ?
-            if (result.HasError)
-            {
-                m_status = ServerStatus.Unknown;
-                EveMonClient.Notifications.NotifyServerStatusError(result);
-
-                // Notify subscribers about update
-                EveMonClient.OnServerStatusUpdated(this, lastStatus, m_status);
-                return;
-            }
-
-            // Update status and users
-            m_users = result.Result.Players;
-            m_status = result.Result.Open ? ServerStatus.Online : ServerStatus.Offline;
-
-            // Invalidate any error notifications
-            EveMonClient.Notifications.InvalidateAPIError();
-
-            // Notify subscribers about update
-            EveMonClient.OnServerStatusUpdated(this, lastStatus, m_status);
-
-            // Send a notification
-            if (lastStatus != m_status)
-            {
-                EveMonClient.Notifications.NotifyServerStatusChanged(Name, m_status);
-                return;
-            }
-
-            EveMonClient.Notifications.InvalidateServerStatusChange();
+            m_nextUpdate = DateTime.MinValue;
         }
 
         /// <summary>
@@ -122,9 +78,113 @@ namespace EVEMon.Common.Models
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
-        private void EveMonClient_TimerTick(object sender, EventArgs e)
+        private async void EveMonClient_TimerTick(object sender, EventArgs e)
         {
             m_serverDateTime = m_serverDateTime.AddSeconds(1);
+            await UpdateIfDueAsync();
+        }
+
+        /// <summary>
+        /// Queries the server status when the user's update period has elapsed.
+        /// </summary>
+        private async Task UpdateIfDueAsync()
+        {
+            if (m_isUpdating || DateTime.UtcNow < m_nextUpdate)
+                return;
+
+            // The check can be turned off from the update settings
+            UpdatePeriod period = UpdatePeriod.Minutes5;
+            string key = CCPAPIGenericMethods.ServerStatus.ToString();
+            if (Settings.Updates.Periods.ContainsKey(key))
+                period = Settings.Updates.Periods[key];
+
+            if (period == UpdatePeriod.Never)
+            {
+                if (m_status != ServerStatus.CheckDisabled)
+                    SetStatus(ServerStatus.CheckDisabled);
+                m_nextUpdate = DateTime.UtcNow.AddMinutes(1);
+                return;
+            }
+
+            if (!NetworkMonitor.IsNetworkAvailable)
+                return;
+
+            m_isUpdating = true;
+            try
+            {
+                await QueryStatusAsync();
+            }
+            finally
+            {
+                m_nextUpdate = DateTime.UtcNow.Add(period.ToDuration());
+                m_isUpdating = false;
+            }
+        }
+
+        /// <summary>
+        /// Queries ESI for the server status.
+        /// </summary>
+        private async Task QueryStatusAsync()
+        {
+            DownloadResult<SerializableESIServerStatus> result =
+                await Util.DownloadJsonAsync<SerializableESIServerStatus>(s_statusUrl, acceptEncoded: true);
+
+            // EVE time is UTC
+            m_serverDateTime = DateTime.UtcNow;
+
+            if (result.Error != null)
+            {
+                // ESI answers "service unavailable" while Tranquility is down (e.g. daily downtime)
+                HttpStatusCode? statusCode = result.Error.ResponseStatusCode;
+                if (statusCode == HttpStatusCode.ServiceUnavailable || statusCode == HttpStatusCode.GatewayTimeout ||
+                    statusCode == HttpStatusCode.BadGateway)
+                {
+                    EveMonClient.Notifications.InvalidateAPIError();
+                    SetStatus(ServerStatus.Offline);
+                    return;
+                }
+
+                EveMonClient.Notifications.NotifyServerStatusError(
+                    new CCPAPIResult<SerializableESIServerStatus>(result.Error));
+                SetStatus(ServerStatus.Unknown, notifyChange: false);
+                return;
+            }
+
+            if (result.Result == null)
+            {
+                SetStatus(ServerStatus.Unknown, notifyChange: false);
+                return;
+            }
+
+            // In VIP mode only CCP and selected players can log in
+            m_users = result.Result.Players;
+            EveMonClient.Notifications.InvalidateAPIError();
+            SetStatus(result.Result.Vip == true ? ServerStatus.Offline : ServerStatus.Online);
+        }
+
+        /// <summary>
+        /// Updates the status and notifies the subscribers.
+        /// </summary>
+        /// <param name="status">The new status.</param>
+        /// <param name="notifyChange">if set to <c>true</c>, a notification is sent when the status changed.</param>
+        private void SetStatus(ServerStatus status, bool notifyChange = true)
+        {
+            ServerStatus lastStatus = m_status;
+            m_status = status;
+
+            // Notify subscribers about update
+            EveMonClient.OnServerStatusUpdated(this, lastStatus, m_status);
+
+            // Send a notification when the server goes up or down
+            // (finding it online at start up is not news)
+            bool cameOnlineFromUnknown = lastStatus == ServerStatus.Unknown && m_status == ServerStatus.Online;
+            if (notifyChange && lastStatus != m_status && !cameOnlineFromUnknown)
+            {
+                EveMonClient.Notifications.NotifyServerStatusChanged(Name, m_status);
+                return;
+            }
+
+            EveMonClient.Notifications.InvalidateServerStatusChange();
         }
     }
 }

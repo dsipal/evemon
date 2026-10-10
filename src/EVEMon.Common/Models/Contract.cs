@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EVEMon.Common.Constants;
 using EVEMon.Common.Data;
+using EVEMon.Common.Esi;
 using EVEMon.Common.Enumerations;
 using EVEMon.Common.Enumerations.CCPAPI;
 using EVEMon.Common.Extensions;
@@ -467,12 +468,12 @@ namespace EVEMon.Common.Models
             m_queryPending = true;
 
             // Special condition to identify corporation contracts in character query
-            APIKey apiKey = IssuedFor == IssuedFor.Corporation && CCPAPICorporationMethods.CorporationContracts.Equals(m_method)
-                ? Character.Identity.FindAPIKeyWithAccess(CCPAPICorporationMethods.CorporationContracts)
-                : Character.Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.Contracts);
+            ESIKey esiKey = IssuedFor == IssuedFor.Corporation && CCPAPICorporationMethods.CorporationContracts.Equals(m_method)
+                ? Character.Identity.FindESIKeyWithAccess(CCPAPICorporationMethods.CorporationContracts)
+                : Character.Identity.FindESIKeyWithAccess(CCPAPICharacterMethods.Contracts);
 
             // Quits if access denied
-            if (apiKey == null)
+            if (esiKey == null)
                 return;
 
             // Special condition to identify corporation contracts in character query and determine the correct api method to call
@@ -480,8 +481,8 @@ namespace EVEMon.Common.Models
                 ? CCPAPIGenericMethods.CorporationContractItems
                 : CCPAPIGenericMethods.ContractItems;
 
-            EveMonClient.APIProviders.CurrentProvider.QueryMethodAsync<SerializableAPIContractItems>(
-                m_apiMethod, apiKey.ID, apiKey.VerificationCode, Character.CharacterID, ID, OnContractItemsDownloaded);
+            EsiQueries.QueryAsync<SerializableAPIContractItems>(
+                m_apiMethod, esiKey, Character.CharacterID, ID, OnContractItemsDownloaded);
         }
 
         /// <summary>

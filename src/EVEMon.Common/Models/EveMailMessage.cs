@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EVEMon.Common.Constants;
+using EVEMon.Common.Esi;
 using EVEMon.Common.Enumerations;
 using EVEMon.Common.Enumerations.CCPAPI;
 using EVEMon.Common.Extensions;
@@ -226,15 +227,12 @@ namespace EVEMon.Common.Models
             m_queryPending = true;
 
             // Quits if access denied
-            APIKey apiKey = m_ccpCharacter.Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.MailBodies);
-            if (apiKey == null)
+            ESIKey esiKey = m_ccpCharacter.Identity.FindESIKeyWithAccess(CCPAPICharacterMethods.MailBodies);
+            if (esiKey == null)
                 return;
 
-            EveMonClient.APIProviders.CurrentProvider.QueryMethodAsync<SerializableAPIMailBodies>(
-                CCPAPICharacterMethods.MailBodies,
-                apiKey.ID,
-                apiKey.VerificationCode,
-                m_ccpCharacter.CharacterID,
+            EsiQueries.QueryAsync<SerializableAPIMailBodies>(
+                CCPAPICharacterMethods.MailBodies, esiKey, m_ccpCharacter.CharacterID,
                 MessageID,
                 OnEVEMailBodyDownloaded);
         }

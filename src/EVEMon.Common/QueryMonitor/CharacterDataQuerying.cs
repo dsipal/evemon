@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EVEMon.Common.Esi;
 using EVEMon.Common.Enumerations;
 using EVEMon.Common.Enumerations.CCPAPI;
 using EVEMon.Common.Helpers;
@@ -204,15 +205,12 @@ namespace EVEMon.Common.QueryMonitor
                 return;
 
             // Quits if access denied
-            APIKey apiKey = m_ccpCharacter.Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.MailingLists);
-            if (apiKey == null)
+            ESIKey esiKey = m_ccpCharacter.Identity.FindESIKeyWithAccess(CCPAPICharacterMethods.MailingLists);
+            if (esiKey == null)
                 return;
 
-            EveMonClient.APIProviders.CurrentProvider.QueryMethodAsync<SerializableAPIMailingLists>(
-                CCPAPICharacterMethods.MailingLists,
-                apiKey.ID,
-                apiKey.VerificationCode,
-                m_ccpCharacter.CharacterID,
+            EsiQueries.QueryAsync<SerializableAPIMailingLists>(
+                CCPAPICharacterMethods.MailingLists, esiKey, m_ccpCharacter.CharacterID,
                 OnMailingListsUpdated);
         }
 
@@ -226,15 +224,12 @@ namespace EVEMon.Common.QueryMonitor
                 return;
 
             // Quits if access denied
-            APIKey apiKey = m_ccpCharacter.Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.CharacterInfo);
-            if (apiKey == null)
+            ESIKey esiKey = m_ccpCharacter.Identity.FindESIKeyWithAccess(CCPAPICharacterMethods.CharacterInfo);
+            if (esiKey == null)
                 return;
 
-            EveMonClient.APIProviders.CurrentProvider.QueryMethodAsync<SerializableAPICharacterInfo>(
-                CCPAPICharacterMethods.CharacterInfo,
-                apiKey.ID,
-                apiKey.VerificationCode,
-                m_ccpCharacter.CharacterID,
+            EsiQueries.QueryAsync<SerializableAPICharacterInfo>(
+                CCPAPICharacterMethods.CharacterInfo, esiKey, m_ccpCharacter.CharacterID,
                 OnCharacterInfoUpdated);
         }
 
@@ -248,15 +243,12 @@ namespace EVEMon.Common.QueryMonitor
                 return;
 
             // Quits if access denied
-            APIKey apiKey = m_ccpCharacter.Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.Contracts);
-            if (apiKey == null)
+            ESIKey esiKey = m_ccpCharacter.Identity.FindESIKeyWithAccess(CCPAPICharacterMethods.Contracts);
+            if (esiKey == null)
                 return;
 
-            EveMonClient.APIProviders.CurrentProvider.QueryMethodAsync<SerializableAPIContractBids>(
-                CCPAPIGenericMethods.ContractBids,
-                apiKey.ID,
-                apiKey.VerificationCode,
-                m_ccpCharacter.CharacterID,
+            EsiQueries.QueryAsync<SerializableAPIContractBids>(
+                CCPAPIGenericMethods.ContractBids, esiKey, m_ccpCharacter.CharacterID,
                 OnContractBidsUpdated);
         }
 
@@ -333,10 +325,6 @@ namespace EVEMon.Common.QueryMonitor
 
             // Import the data
             m_ccpCharacter.SkillQueue.Import(result.Result.Queue);
-
-            // Check the account has a character in training (if API key of type "Account")
-            APIKey apikey = m_ccpCharacter.Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.SkillInTraining);
-            apikey?.CharacterInTraining();
 
             // Check the character has less than a day of training in skill queue
             if (m_ccpCharacter.IsTraining && m_ccpCharacter.SkillQueue.LessThanWarningThreshold)

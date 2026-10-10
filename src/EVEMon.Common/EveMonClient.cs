@@ -66,7 +66,7 @@ namespace EVEMon.Common
             Notifications = new GlobalNotificationCollection();
             Characters = new GlobalCharacterCollection();
             Datafiles = new GlobalDatafileCollection();
-            APIKeys = new GlobalAPIKeyCollection();
+            ESIKeys = new GlobalESIKeyCollection();
             EVEServer = new EveServer();
 
             Trace("done");
@@ -97,7 +97,7 @@ namespace EVEMon.Common
         /// </summary>
         internal static void ResetCollections()
         {
-            APIKeys = new GlobalAPIKeyCollection();
+            ESIKeys = new GlobalESIKeyCollection();
             Characters = new GlobalCharacterCollection();
             Notifications = new GlobalNotificationCollection();
             CharacterIdentities = new GlobalCharacterIdentityCollection();
@@ -413,12 +413,12 @@ namespace EVEMon.Common
         #endregion
 
 
-        #region API Keys management
+        #region ESI keys management
 
         /// <summary>
-        /// Gets the collection of all known API keys.
+        /// Gets the collection of the characters authorized through EVE SSO.
         /// </summary>
-        public static GlobalAPIKeyCollection APIKeys { get; private set; }
+        public static GlobalESIKeyCollection ESIKeys { get; private set; }
 
         /// <summary>
         /// Gets the collection of all characters.

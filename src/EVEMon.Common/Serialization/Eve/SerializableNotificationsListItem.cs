@@ -34,5 +34,17 @@ namespace EVEMon.Common.Serialization.Eve
 
         [XmlIgnore]
         public DateTime SentDate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the type name, when the source provides it (ESI) instead of a type ID.
+        /// </summary>
+        [XmlIgnore]
+        public string TypeName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the notification text, when the source provides it with the notification (ESI).
+        /// </summary>
+        [XmlIgnore]
+        public string Text { get; set; }
     }
 }

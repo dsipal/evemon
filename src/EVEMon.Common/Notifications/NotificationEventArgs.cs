@@ -31,9 +31,9 @@ namespace EVEMon.Common.Notifications
         public object Sender { get; }
 
         /// <summary>
-        /// Gets the API key that sent this notification, or null if the sender was not an account.
+        /// Gets the ESI key that sent this notification, or null if the sender was not an ESI key.
         /// </summary>
-        public APIKey SenderAPIKey => Sender as APIKey;
+        public ESIKey SenderESIKey => Sender as ESIKey;
 
         /// <summary>
         /// Gets the character that sent this notification, or null if the sender was not a character.

@@ -185,8 +185,15 @@ namespace EVEMon.Common.Models
 
             string location = m_locationID.ToString(CultureConstants.InvariantCulture);
 
+            // Upwell structure: use its name when ESI resolved it
             if (m_locationID > Int32.MaxValue)
-                return location;
+            {
+                string structureName = Esi.EsiNameResolver.GetCachedStructureName(m_locationID);
+                if (structureName != null)
+                    FullLocation = structureName;
+
+                return structureName ?? location;
+            }
 
             int locationID = Convert.ToInt32(LocationID);
             Station station = Station.GetByID(locationID);

@@ -1,41 +1,56 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using EVEMon.Common.Constants;
 using EVEMon.Common.Helpers;
-using NetOffice.OutlookApi;
-using NetOffice.OutlookApi.Enums;
 
 namespace EVEMon.Common.ExternalCalendar
 {
     /// <summary>
     /// Class for handling MS Outlook calendar.
     /// </summary>
+    /// <remarks>
+    /// Outlook is driven through late-bound COM automation (<c>dynamic</c>), so no Office interop
+    /// assemblies are required and any installed Outlook version is used.
+    /// </remarks>
     public sealed class OutlookCalendarEvent : CalendarEvent
     {
-        private static Application s_outlookApplication;
-        private static MAPIFolder s_mapiFolder;
+        // Outlook object model constants
+        private const int OlFolderCalendar = 9;         // OlDefaultFolders.olFolderCalendar
+        private const int OlAppointmentItem = 1;        // OlItemType.olAppointmentItem
+        private const int OlBusy = 2;                   // OlBusyStatus.olBusy
+        private const int OlAppointmentClass = 26;      // OlObjectClass.olAppointment
+
+        private static dynamic s_outlookApplication;
+        private static dynamic s_mapiFolder;
 
 
         #region Properties
 
         /// <summary>
-        /// Gets the Outlook application.
+        /// Gets the Outlook application, or <c>null</c> if Outlook is not available.
         /// </summary>
         /// <value>The outlook application.</value>
-        internal static Application OutlookApplication
+        internal static dynamic OutlookApplication
         {
             get
             {
                 try
                 {
+                    // Outlook may have been closed since we connected to it
+                    if (s_outlookApplication != null && !IsConnected())
+                    {
+                        s_outlookApplication = null;
+                        s_mapiFolder = null;
+                    }
+
                     if (s_outlookApplication == null)
                     {
-                        s_outlookApplication = new Application();
-                        s_outlookApplication.QuitEvent += Outlook_Quit;
+                        Type outlookType = Type.GetTypeFromProgID("Outlook.Application");
+                        if (outlookType != null)
+                            s_outlookApplication = Activator.CreateInstance(outlookType);
                     }
                 }
                 catch (COMException ex)
@@ -53,19 +68,28 @@ namespace EVEMon.Common.ExternalCalendar
         #endregion
 
 
-        #region Event Hanlders
+        #region Helper Methods
 
         /// <summary>
-        /// Occurs when Outlook quits.
+        /// Checks whether the Outlook instance we hold is still running.
         /// </summary>
-        private static void Outlook_Quit()
+        /// <returns></returns>
+        private static bool IsConnected()
         {
-            s_outlookApplication.QuitEvent -= Outlook_Quit;
-            s_outlookApplication.Dispose();
-            s_outlookApplication = null;
-            s_mapiFolder = null;
+            try
+            {
+                string version = s_outlookApplication.Version;
+                return version != null;
+            }
+            catch (COMException)
+            {
+                return false;
+            }
+            catch (InvalidComObjectException)
+            {
+                return false;
+            }
         }
-
 
         #endregion
 
@@ -81,9 +105,9 @@ namespace EVEMon.Common.ExternalCalendar
         internal override Task AddOrUpdateEventAsync(bool eventExists, int queuePosition, bool lastSkillInQueue)
             => TaskHelper.RunIOBoundTaskAsync(() =>
             {
-                AppointmentItem eventItem = eventExists
-                    ? (AppointmentItem)Events[0]
-                    : (AppointmentItem)s_mapiFolder.Items.Add(OlItemType.olAppointmentItem);
+                dynamic eventItem = eventExists
+                    ? Events[0]
+                    : s_mapiFolder.Items.Add(OlAppointmentItem);
 
                 eventItem.Subject = Subject;
                 eventItem.Start = StartDate;
@@ -98,7 +122,7 @@ namespace EVEMon.Common.ExternalCalendar
                     : $"Added: {DateTime.Now} Queue Position: {queuePositionText}";
 
                 eventItem.ReminderSet = ItemReminder || AlternateReminder;
-                eventItem.BusyStatus = OlBusyStatus.olBusy;
+                eventItem.BusyStatus = OlBusy;
                 eventItem.AllDayEvent = false;
                 eventItem.Location = String.Empty;
 
@@ -121,7 +145,7 @@ namespace EVEMon.Common.ExternalCalendar
                     DateTime dateTimeAlternateReminder = WorkOutAlternateReminders();
 
                     // Subtract the reminder time from the event time
-                    TimeSpan timeSpan = eventItem.Start.Subtract(dateTimeAlternateReminder);
+                    TimeSpan timeSpan = ((DateTime)eventItem.Start).Subtract(dateTimeAlternateReminder);
                     eventItem.ReminderMinutesBeforeStart = Math.Abs(timeSpan.Hours * 60 + timeSpan.Minutes);
                     Minutes = eventItem.ReminderMinutesBeforeStart;
                 }
@@ -141,7 +165,7 @@ namespace EVEMon.Common.ExternalCalendar
             if (Events.Count < 1)
                 return false;
 
-            AppointmentItem eventItem = (AppointmentItem)Events[0];
+            dynamic eventItem = Events[0];
             StartDate = eventItem.Start;
             EndDate = eventItem.End;
             Subject = eventItem.Subject;
@@ -167,7 +191,7 @@ namespace EVEMon.Common.ExternalCalendar
         internal override Task DeleteEventAsync(int eventIndex)
             => TaskHelper.RunIOBoundTaskAsync(() =>
             {
-                ((AppointmentItem)Events[eventIndex]).Delete();
+                ((dynamic)Events[eventIndex]).Delete();
             });
 
         /// <summary>
@@ -189,11 +213,11 @@ namespace EVEMon.Common.ExternalCalendar
         /// <param name="useDefaultCalendar">if set to <c>true</c> [use default calendar].</param>
         /// <param name="path">The path.</param>
         /// <returns></returns>
-        private static bool GetMapiFolder(IEnumerable folders, bool useDefaultCalendar = false, string path = null)
+        private static bool GetMapiFolder(dynamic folders, bool useDefaultCalendar = false, string path = null)
         {
             if (useDefaultCalendar)
             {
-                s_mapiFolder = OutlookApplication.Session.GetDefaultFolder(OlDefaultFolders.olFolderCalendar);
+                s_mapiFolder = OutlookApplication.Session.GetDefaultFolder(OlFolderCalendar);
                 return s_mapiFolder != null;
             }
 
@@ -205,18 +229,23 @@ namespace EVEMon.Common.ExternalCalendar
 
             string pathRoot = GetFolderPathRoot(path);
 
-            foreach (MAPIFolder folder in folders.Cast<MAPIFolder>().TakeWhile(
-                folder => s_mapiFolder == null).Select(
-                    folder => new { folder, folderRoot = GetFolderPathRoot(folder.FolderPath) }).Where(
-                        folder => folder.folderRoot == pathRoot).Select(folder => folder.folder))
+            // Outlook collections are 1-based
+            int count = folders.Count;
+            for (int i = 1; i <= count && s_mapiFolder == null; i++)
             {
-                if (folder.DefaultItemType == OlItemType.olAppointmentItem && folder.FolderPath == path)
+                dynamic folder = folders.Item(i);
+                string folderPath = folder.FolderPath;
+
+                if (GetFolderPathRoot(folderPath) != pathRoot)
+                    continue;
+
+                if (folder.DefaultItemType == OlAppointmentItem && folderPath == path)
                 {
                     s_mapiFolder = folder;
                     break;
                 }
 
-                if (folder.Folders.Any())
+                if (folder.Folders.Count > 0)
                     GetMapiFolder(folder.Folders, path: path);
             }
 
@@ -238,7 +267,7 @@ namespace EVEMon.Common.ExternalCalendar
         {
             // Use a Jet Query to filter the details we need initially between the two specified dates
             string dateFilter = $"[Start] >= '{StartDate:g}' and [End] <= '{EndDate:g}'";
-            _Items calendarItems = s_mapiFolder.Items.Restrict(dateFilter);
+            dynamic calendarItems = s_mapiFolder.Items.Restrict(dateFilter);
             calendarItems.Sort("[Start]", Type.Missing);
             calendarItems.IncludeRecurrences = true;
 
@@ -249,13 +278,15 @@ namespace EVEMon.Common.ExternalCalendar
 
             // Use Find and FindNext methods to get all the items
             ArrayList resultArray = new ArrayList();
-            AppointmentItem eventItem = calendarItems.Find(subjectFilter) as AppointmentItem;
+            dynamic eventItem = calendarItems.Find(subjectFilter);
             while (eventItem != null)
             {
-                resultArray.Add(eventItem);
+                // Only keep appointments (Find can also match meeting requests, tasks, ...)
+                if (eventItem.Class == OlAppointmentClass)
+                    resultArray.Add(eventItem);
 
                 // Find the next event
-                eventItem = calendarItems.FindNext() as AppointmentItem;
+                eventItem = calendarItems.FindNext();
             }
 
             return resultArray;

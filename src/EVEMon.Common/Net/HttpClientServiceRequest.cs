@@ -156,12 +156,20 @@ namespace EVEMon.Common.Net
         /// </summary>
         /// <returns></returns>
         private static HttpClientHandler GetHttpClientHandler()
-            => new HttpClientHandler
+        {
+            HttpClientHandler handler = new HttpClientHandler
             {
                 AllowAutoRedirect = false,
                 MaxAutomaticRedirections = HttpWebClientServiceState.MaxRedirects,
                 Proxy = GetWebProxy()
             };
+
+            // HttpClient ignores ServicePointManager, so the debug certificate bypass is set per handler
+            if (EveMonClient.IsDebugBuild)
+                handler.ServerCertificateCustomValidationCallback = HttpWebClientService.DummyCertificateValidationCallback;
+
+            return handler;
+        }
 
         /// <summary>
         /// Gets the web proxy.

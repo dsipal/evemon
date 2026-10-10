@@ -30,14 +30,14 @@ namespace EVEMon.Common
         public static event EventHandler SettingsChanged;
 
         /// <summary>
-        /// Occurs when the collection of API Keys changed.
+        /// Occurs when the collection of ESI keys (authorized characters) changed.
         /// </summary>
-        public static event EventHandler APIKeyCollectionChanged;
+        public static event EventHandler ESIKeyCollectionChanged;
 
         /// <summary>
-        /// Occurs when the API Keys monitored state changed.
+        /// Occurs when the ESI keys monitored state changed.
         /// </summary>
-        public static event EventHandler APIKeyMonitoredChanged;
+        public static event EventHandler ESIKeyMonitoredChanged;
 
         /// <summary>
         /// Occurs when the collection of characters changed.
@@ -55,16 +55,6 @@ namespace EVEMon.Common
         public static event EventHandler<CharacterChangedEventArgs> CharacterImplantSetCollectionChanged;
 
         /// <summary>
-        /// Occurs when a character training check on an account type API key has been updated.
-        /// </summary>
-        public static event EventHandler CharactersSkillInTrainingUpdated;
-
-        /// <summary>
-        /// Occurs when an account status has been updated.
-        /// </summary>
-        public static event EventHandler AccountStatusUpdated;
-
-        /// <summary>
         /// Occurs when the conquerable station list has been updated.
         /// </summary>
         public static event EventHandler ConquerableStationListUpdated;
@@ -75,9 +65,9 @@ namespace EVEMon.Common
         public static event EventHandler EveFactionalWarfareStatsUpdated;
 
         /// <summary>
-        /// Occurs when the API key info have been updated.
+        /// Occurs when an ESI key has been validated or its state changed.
         /// </summary>
-        public static event EventHandler APIKeyInfoUpdated;
+        public static event EventHandler ESIKeyInfoUpdated;
 
         /// <summary>
         /// Occurs when the EveIDToName list has been updated.
@@ -98,11 +88,6 @@ namespace EVEMon.Common
         /// Occurs when the EveFlags list has been updated.
         /// </summary>
         public static event EventHandler EveFlagsUpdated;
-
-        /// <summary>
-        /// Occurs when the list of characters in an API key has been updated.
-        /// </summary>
-        public static event EventHandler<APIKeyInfoChangedEventArgs> CharacterListUpdated;
 
         /// <summary>
         /// Occurs when one or many queued skills have been completed.
@@ -409,30 +394,29 @@ namespace EVEMon.Common
         }
 
         /// <summary>
-        /// Called when the API key collection changed.
+        /// Called when the ESI key collection changed.
         /// </summary>
-        internal static void OnAPIKeyCollectionChanged()
+        internal static void OnESIKeyCollectionChanged()
         {
             if (Closed)
                 return;
 
             Trace();
-            EveMonClient.Characters.UpdateAccountStatuses();
             Settings.Save();
-            APIKeyCollectionChanged?.ThreadSafeInvoke(null, EventArgs.Empty);
+            ESIKeyCollectionChanged?.ThreadSafeInvoke(null, EventArgs.Empty);
         }
 
         /// <summary>
-        /// Called when the monitored state of an API key changed.
+        /// Called when the monitored state of an ESI key changed.
         /// </summary>
-        internal static void OnAPIKeyMonitoredChanged()
+        internal static void OnESIKeyMonitoredChanged()
         {
             if (Closed)
                 return;
 
             Trace();
             Settings.Save();
-            APIKeyMonitoredChanged?.ThreadSafeInvoke(null, EventArgs.Empty);
+            ESIKeyMonitoredChanged?.ThreadSafeInvoke(null, EventArgs.Empty);
         }
 
         /// <summary>
@@ -535,59 +519,17 @@ namespace EVEMon.Common
         }
 
         /// <summary>
-        /// Called when the API key info updated.
+        /// Called when an ESI key has been validated or its state changed.
         /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        internal static void OnAPIKeyInfoUpdated(APIKey apiKey)
+        /// <param name="esiKey">The ESI key.</param>
+        internal static void OnESIKeyInfoUpdated(ESIKey esiKey)
         {
             if (Closed)
                 return;
 
-            Trace(apiKey.ToString());
+            Trace(esiKey.ToString());
             Settings.Save();
-            APIKeyInfoUpdated?.ThreadSafeInvoke(null, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Called when an account status has been updated.
-        /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        internal static void OnAccountStatusUpdated(APIKey apiKey)
-        {
-            if (Closed)
-                return;
-
-            Trace(apiKey.ToString());
-            EveMonClient.Characters.UpdateAccountStatuses();
-            Settings.Save();
-            AccountStatusUpdated?.ThreadSafeInvoke(null, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Called when the character list updated.
-        /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        internal static void OnCharacterListUpdated(APIKey apiKey)
-        {
-            if (Closed)
-                return;
-
-            Trace(apiKey.ToString());
-            Settings.Save();
-            CharacterListUpdated?.ThreadSafeInvoke(null, new APIKeyInfoChangedEventArgs(apiKey));
-        }
-
-        /// <summary>
-        /// Called when all characters, exposed throu the API key, 'skill in training' check has been updated.
-        /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        internal static void OnCharactersSkillInTrainingUpdated(APIKey apiKey)
-        {
-            if (Closed)
-                return;
-
-            Trace(apiKey.ToString());
-            CharactersSkillInTrainingUpdated?.ThreadSafeInvoke(null, EventArgs.Empty);
+            ESIKeyInfoUpdated?.ThreadSafeInvoke(null, EventArgs.Empty);
         }
 
         /// <summary>

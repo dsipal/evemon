@@ -12,6 +12,7 @@ namespace EVEMon.InstallBuilder
 {
     internal static class Program
     {
+        private static string s_evemonOutputDir;
         private static string s_sourceFilesDir;
         private static string s_outputPath;
         private static string s_installerDir;
@@ -33,6 +34,12 @@ namespace EVEMon.InstallBuilder
         private static int Main(string[] args)
         {
             CheckIsSnapshot();
+
+            bool versionOnly = args.Any() && args[0].StartsWith("-v", StringComparison.OrdinalIgnoreCase);
+
+            // Publish EVEMon (self-contained) into the folder the installer and zip are built from
+            if (!versionOnly && PublishEVEMon() != 0)
+                return 1;
 
             if (!HasVersion())
                 return 1;
@@ -107,7 +114,7 @@ namespace EVEMon.InstallBuilder
             {
                 if (String.IsNullOrWhiteSpace(s_solutionDir))
                 {
-                    s_solutionDir = Regex.Match(Directory.GetCurrentDirectory(), @"[a-zA-Z]+:.*\\(?=tools)",
+                    s_solutionDir = Regex.Match(AppContext.BaseDirectory, @"[a-zA-Z]+:.*\\(?=tools)",
                         RegexOptions.Compiled | RegexOptions.IgnoreCase).ToString();
                 }
                 return s_solutionDir;
@@ -124,7 +131,7 @@ namespace EVEMon.InstallBuilder
             {
                 if (String.IsNullOrWhiteSpace(s_projectDir))
                 {
-                    s_projectDir = Regex.Match(Directory.GetCurrentDirectory(), @"[a-zA-Z]+:.*\\(?=bin)",
+                    s_projectDir = Regex.Match(AppContext.BaseDirectory, @"[a-zA-Z]+:.*\\(?=bin)",
                         RegexOptions.Compiled | RegexOptions.IgnoreCase).ToString();
                 }
                 return s_projectDir;
@@ -141,14 +148,30 @@ namespace EVEMon.InstallBuilder
             {
                 if (String.IsNullOrWhiteSpace(s_outputPath))
                 {
-                    s_outputPath = AppDomain.CurrentDomain.SetupInformation.ApplicationBase.Remove(0, ProjectDirectory.Length);
+                    s_outputPath = AppContext.BaseDirectory.Remove(0, ProjectDirectory.Length);
                 }
                 return s_outputPath;
             }
         }
 
         /// <summary>
-        /// Gets the source files directory.
+        /// Gets the EVEMon build output directory (e.g. src\EVEMon\bin\Release\).
+        /// </summary>
+        /// <returns></returns>
+        private static string EVEMonOutputDirectory
+        {
+            get
+            {
+                if (String.IsNullOrWhiteSpace(s_evemonOutputDir))
+                {
+                    s_evemonOutputDir = Path.GetFullPath(Path.Combine(SolutionDirectory, @"src\EVEMon\", OutputPath));
+                }
+                return s_evemonOutputDir;
+            }
+        }
+
+        /// <summary>
+        /// Gets the source files directory, where EVEMon is published to.
         /// </summary>
         /// <returns></returns>
         private static string SourceFilesDirectory
@@ -157,7 +180,7 @@ namespace EVEMon.InstallBuilder
             {
                 if (String.IsNullOrWhiteSpace(s_sourceFilesDir))
                 {
-                    s_sourceFilesDir = Path.GetFullPath(Path.Combine(SolutionDirectory, @"src\EVEMon\", OutputPath));
+                    s_sourceFilesDir = Path.Combine(EVEMonOutputDirectory, @"publish\");
                 }
                 return s_sourceFilesDir;
             }
@@ -218,7 +241,7 @@ namespace EVEMon.InstallBuilder
         /// <returns></returns>
         private static string GetInstallbuilderDirectory(string directory)
             => Path.GetFullPath(
-                Regex.Replace(SourceFilesDirectory, "Debug|Release",
+                Regex.Replace(EVEMonOutputDirectory, "Debug|Release",
                     Path.Combine("Installbuilder", directory),
                     RegexOptions.Compiled | RegexOptions.IgnoreCase));
 
@@ -268,6 +291,43 @@ namespace EVEMon.InstallBuilder
         }
 
         /// <summary>
+        /// Publishes EVEMon as a self-contained win-x64 application into <see cref="SourceFilesDirectory"/>.
+        /// </summary>
+        /// <returns>The exit code of 'dotnet publish'.</returns>
+        private static int PublishEVEMon()
+        {
+            string project = Path.Combine(SolutionDirectory, @"src\EVEMon\EVEMon.csproj");
+            string configuration = s_isSnapshot ? "Snapshot" : "Release";
+
+            // Start from an empty folder so no stale files end up in the installer
+            if (Directory.Exists(SourceFilesDirectory))
+                Directory.Delete(SourceFilesDirectory, true);
+
+            string param = String.Format(CultureInfo.InvariantCulture,
+                "publish \"{0}\" -c {1} -r win-x64 --self-contained true -p:PublishSingleFile=false -o \"{2}\"",
+                project, configuration, SourceFilesDirectory.TrimEnd('\\'));
+
+            Console.WriteLine("Publishing EVEMon : dotnet {0}", param);
+
+            ProcessStartInfo psi = new ProcessStartInfo("dotnet", param)
+            {
+                WorkingDirectory = SolutionDirectory,
+                UseShellExecute = false
+            };
+
+            using (Process publishProcess = Process.Start(psi))
+            {
+                publishProcess.WaitForExit();
+
+                if (publishProcess.ExitCode != 0)
+                    Console.WriteLine("dotnet publish exited with errors.");
+
+                Console.WriteLine();
+                return publishProcess.ExitCode;
+            }
+        }
+
+        /// <summary>
         /// Gets true if a release version has been compiled.
         /// </summary>
         private static bool HasVersion()
@@ -278,7 +338,7 @@ namespace EVEMon.InstallBuilder
             }
             catch (Exception)
             {
-                Console.WriteLine("A \"Release\" has to be compiled first.");
+                Console.WriteLine("A \"Release\" has to be published first.");
                 Console.WriteLine("Install Builder will now close.");
                 Console.ReadLine();
                 return false;

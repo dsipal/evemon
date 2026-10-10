@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -52,7 +53,6 @@ namespace EVEMon
 
             // Subscribe application's events (especially the unhandled exceptions management for the crash box)
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
             Application.ThreadException += Application_ThreadException;
             Application.ApplicationExit += ApplicationExitCallback;
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -136,6 +136,11 @@ namespace EVEMon
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
 
+                // Keep the .NET Framework look the forms were designed for: no DPI awareness
+                // (Windows scales the windows) and Microsoft Sans Serif 8.25pt as the default font
+                Application.SetHighDpiMode(HighDpiMode.DpiUnaware);
+                Application.SetDefaultFont(new Font("Microsoft Sans Serif", 8.25F));
+
                 string appId = "EVEMon";
 
                 if (EveMonClient.IsDebugBuild)
@@ -176,14 +181,6 @@ namespace EVEMon
         {
             HandleUnhandledException(e.ExceptionObject as Exception);
         }
-
-        /// <summary>
-        /// Occurs when the application tries to resolve an assembly dependency.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="ResolveEventArgs"/> instance containing the event data.</param>
-        /// <returns></returns>
-        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs e) => HandleAssemblyResolve(e);
 
         /// <summary>
         /// Handles exceptions in WinForms threads, such exceptions
@@ -229,9 +226,6 @@ namespace EVEMon
                     else
                         form.ShowDialog();
                 }
-
-                // Notify Gooogle Analytics about ending via the Unhandled Exception window
-                GAnalyticsTracker.TrackEnd(typeof(Program));
             }
             catch (Exception e)
             {
@@ -260,32 +254,6 @@ namespace EVEMon
             }
 
             Environment.Exit(1);
-        }
-
-        /// <summary>
-        /// Handles the assembly resolve.
-        /// </summary>
-        /// <param name="e">The <see cref="ResolveEventArgs"/> instance containing the event data.</param>
-        /// <returns>The resolved assembly</returns>
-        /// <remarks>
-        /// Because we are not distributing the config file along with the application,
-        /// we need to resolve the assembly dependencies internally.
-        /// First we determine which assembly was requested and then we load the distributed one and return it.
-        /// </remarks>
-        private static Assembly HandleAssemblyResolve(ResolveEventArgs e)
-        {
-            try
-            {
-                AssemblyName requestedAssembly = new AssemblyName(e.Name);
-                AssemblyName assembly = AssemblyName.GetAssemblyName($"{requestedAssembly.Name}.dll");
-                if (requestedAssembly.Version < assembly.Version)
-                    return Assembly.Load(assembly);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-            return Assembly.Load(e.Name);
         }
 
         #endregion

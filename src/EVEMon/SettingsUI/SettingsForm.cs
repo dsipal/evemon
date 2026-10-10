@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Resources;
+using System.Resources.Extensions;
 using System.Security;
 using System.Windows.Forms;
 using EVEMon.Common;
@@ -946,7 +947,7 @@ namespace EVEMon.SettingsUI
                 tempImageList.ColorDepth = ColorDepth.Depth32Bit;
                 try
                 {
-                    defaultGroupReader = new ResourceReader(defaultResourcesPath);
+                    defaultGroupReader = new DeserializingResourceReader(defaultResourcesPath);
 
                     basicx = defaultGroupReader.GetEnumerator();
 
@@ -963,7 +964,7 @@ namespace EVEMon.SettingsUI
                 IResourceReader groupReader = null;
                 try
                 {
-                    groupReader = new ResourceReader(groupResourcesPath);
+                    groupReader = new DeserializingResourceReader(groupResourcesPath);
 
                     basicx = groupReader.GetEnumerator();
 

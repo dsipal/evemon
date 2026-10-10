@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using EVEMon.Common.Constants;
+using EVEMon.Common.Esi;
 using EVEMon.Common.Enumerations.CCPAPI;
 using EVEMon.Common.Interfaces;
 using EVEMon.Common.Serialization.Eve;
@@ -15,6 +16,7 @@ namespace EVEMon.Common.Models
 
         private bool m_queryPending;
         private string m_typeName;
+        private readonly string m_esiTypeName;
         private string m_title;
 
 
@@ -31,14 +33,15 @@ namespace EVEMon.Common.Models
 
             NotificationID = src.NotificationID;
             TypeID = src.TypeID;
-            m_typeName = EveNotificationType.GetName(src.TypeID);
+            m_esiTypeName = String.IsNullOrEmpty(src.TypeName) ? null : EsiCharacterQueries.ToTitleWords(src.TypeName);
+            m_typeName = m_esiTypeName ?? EveNotificationType.GetName(src.TypeID);
             SenderName = src.SenderName;
             SentDate = src.SentDate;
             Recipient = new List<string> { ccpCharacter.Name };
             EVENotificationText = new EveNotificationText(this, new SerializableNotificationTextsListItem
             {
-                NotificationID = 0,
-                NotificationText = String.Empty,
+                NotificationID = String.IsNullOrEmpty(src.Text) ? 0 : src.NotificationID,
+                NotificationText = src.Text ?? String.Empty,
             });
         }
 
@@ -77,7 +80,7 @@ namespace EVEMon.Common.Models
         {
             get
             {
-                if (m_typeName == EveMonConstants.UnknownText)
+                if (m_typeName == EveMonConstants.UnknownText && m_esiTypeName == null)
                     m_typeName = EveNotificationType.GetName(TypeID);
 
                 return m_typeName;
@@ -117,6 +120,10 @@ namespace EVEMon.Common.Models
             {
                 if (!String.IsNullOrWhiteSpace(m_title) && !m_title.Contains(EveMonConstants.UnknownText))
                     return m_title;
+
+                // ESI notifications have no subject layout: their type is the title
+                if (m_esiTypeName != null)
+                    return m_title = m_esiTypeName;
 
                 string subjectLayout = EveNotificationType.GetSubjectLayout(TypeID);
                 if (subjectLayout.Contains("{") && String.IsNullOrWhiteSpace(EVENotificationText.NotificationText))
@@ -159,15 +166,12 @@ namespace EVEMon.Common.Models
             m_queryPending = true;
 
             // Quits if access denied
-            APIKey apiKey = m_ccpCharacter.Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.MailingLists);
-            if (apiKey == null)
+            ESIKey esiKey = m_ccpCharacter.Identity.FindESIKeyWithAccess(CCPAPICharacterMethods.NotificationTexts);
+            if (esiKey == null)
                 return;
 
-            EveMonClient.APIProviders.CurrentProvider.QueryMethodAsync<SerializableAPINotificationTexts>(
-                CCPAPICharacterMethods.NotificationTexts,
-                apiKey.ID,
-                apiKey.VerificationCode,
-                m_ccpCharacter.CharacterID,
+            EsiQueries.QueryAsync<SerializableAPINotificationTexts>(
+                CCPAPICharacterMethods.NotificationTexts, esiKey, m_ccpCharacter.CharacterID,
                 NotificationID,
                 OnEVENotificationTextDownloaded);
         }

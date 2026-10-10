@@ -1,0 +1,61 @@
+<Project>
+  <!-- Settings shared by every project in the solution. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Configurations>Debug;Release;Snapshot</Configurations>
+    <Platforms>AnyCPU</Platforms>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+
+    <!--
+      Assembly attributes come from SharedAssemblyInfo.cs / Properties\AssemblyInfo.cs. Only the
+      SDK-only attributes (TargetFramework, SupportedOSPlatform, ...) are generated.
+    -->
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
+
+    <!-- Keep the classic bin\<Configuration>\ layout the tools rely on. -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <!-- Each project declares its own DefineConstants, matching the pre-SDK projects. -->
+    <DisableImplicitConfigurationDefines>true</DisableImplicitConfigurationDefines>
+
+    <!-- .resx files contain binary-serialized ImageListStreamer / Bitmap / Icon data. -->
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+
+    <!--
+      WFO1000: designer-serialization analyzer added in .NET 9. The existing controls rely on the
+      default (serialize everything) behaviour, so keep it rather than annotating every property.
+    -->
+    <NoWarn>$(NoWarn);WFO1000</NoWarn>
+
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' OR '$(Configuration)' == 'Snapshot'">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Snapshot'">
+    <!-- Snapshot builds share the Release output folder, as tools\InstallBuilder expects. -->
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+</Project>

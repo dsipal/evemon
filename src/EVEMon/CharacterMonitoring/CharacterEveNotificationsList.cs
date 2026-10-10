@@ -195,7 +195,6 @@ namespace EVEMon.CharacterMonitoring
             EveMonClient.EveIDToNameUpdated += EveMonClient_EveIDToNameUpdated;
             EveMonClient.NotificationRefTypesUpdated += EveMonClient_NotificationRefTypesUpdated;
             EveMonClient.NotificationSent += EveMonClient_NotificationSent;
-            EveNotificationTextParser.NotificationTextParserUpdated += EveNotificationTextParser_NotificationTextParserUpdated;
             Disposed += OnDisposed;
         }
 
@@ -212,7 +211,6 @@ namespace EVEMon.CharacterMonitoring
             EveMonClient.EveIDToNameUpdated -= EveMonClient_EveIDToNameUpdated;
             EveMonClient.NotificationRefTypesUpdated -= EveMonClient_NotificationRefTypesUpdated;
             EveMonClient.NotificationSent -= EveMonClient_NotificationSent;
-            EveNotificationTextParser.NotificationTextParserUpdated -= EveNotificationTextParser_NotificationTextParserUpdated;
             Disposed -= OnDisposed;
         }
 
@@ -845,16 +843,6 @@ namespace EVEMon.CharacterMonitoring
             // In case there was an error, hide the pane
             if (notification.Result.HasError)
                 eveNotificationReadingPane.HidePane();
-        }
-
-        /// <summary>
-        /// When the notification text parser updates, update the list.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void EveNotificationTextParser_NotificationTextParserUpdated(object sender, EventArgs e)
-        {
-            UpdateColumns();
         }
 
         #endregion
