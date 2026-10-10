@@ -3,6 +3,20 @@
   <releases>
     <release>
       <date>10 October 2026</date>
+      <version>4.0.1.4719</version>
+      <md5>033e3cb92504dfcf4077b60e1d65b91d</md5>
+      <url>https://github.com/dsipal/evemon/releases/tag/v4.0.1</url>
+      <autopatchurl>https://github.com/dsipal/evemon/releases/download/v4.0.1/EVEMon-install-4.0.1.exe</autopatchurl>
+      <autopatchargs>/S /AUTORUN</autopatchargs>
+      <additionalargs>/D=%EVEMON_EXECUTABLE_PATH%</additionalargs>
+      <message><![CDATA[# EVEMon 4.0.1
+
+## Fixed
+- Adding a character no longer crashes on PCs with Windows Smart App Control turned on.
+]]></message>
+    </release>
+    <release>
+      <date>10 October 2026</date>
       <version>4.0.0.4715</version>
       <md5>12f03bae0a6f0749510dbfcb453fe68d</md5>
       <url>https://github.com/dsipal/evemon/releases/tag/v4.0.0</url>
