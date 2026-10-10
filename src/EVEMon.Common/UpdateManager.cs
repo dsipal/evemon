@@ -19,7 +19,7 @@ namespace EVEMon.Common
     {
         // The update feed (patch.xml), published with the EVEMon sources; installers are attached to the
         // GitHub releases it points to
-        private const string UpdateFeedUrl = "https://raw.githubusercontent.com/dsipal/evemon/master/updates/patch.xml";
+        private const string UpdateFeedUrl = "https://raw.githubusercontent.com/dsipal/evemon/main/updates/patch.xml";
 
         private static readonly TimeSpan s_frequency = TimeSpan.FromMinutes(Settings.Updates.UpdateFrequency);
 
