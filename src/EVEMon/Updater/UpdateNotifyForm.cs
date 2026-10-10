@@ -165,7 +165,8 @@ namespace EVEMon.Updater
 
             try
             {
-                Process.Start(filename, args);
+                // Shell execute so Windows can raise the UAC prompt the installer requires
+                Process.Start(new ProcessStartInfo(filename, args) { UseShellExecute = true });
             }
             catch (InvalidOperationException e)
             {

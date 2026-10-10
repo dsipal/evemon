@@ -76,17 +76,14 @@ namespace EVEMon.Common.Models
             UISettings = new CharacterUISettings();
         }
 
+        /// <summary>
+        /// Updates the account status (Alpha/Omega).
+        /// </summary>
+        /// <remarks>ESI does not expose the account status, so it stays unknown.</remarks>
         public void UpdateAccountStatus()
         {
-            APIKey apiKey = Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.AccountStatus);
-            if (apiKey != null)
-            {
-                CharacterStatus = new AccountStatus(apiKey);
-            }
-            else if (CharacterStatus == null)
-            {
+            if (CharacterStatus == null)
                 CharacterStatus = new AccountStatus(AccountStatusType.Unknown);
-            }
         }
 
         #endregion
@@ -497,9 +494,8 @@ namespace EVEMon.Common.Models
             if (String.IsNullOrEmpty(LastKnownLocation))
                 return EveMonConstants.UnknownText;
 
-            // Show the tooltip on when the user provides api key
-            APIKey apiKey = Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.CharacterInfo);
-            if (apiKey == null)
+            // Show the location only when the character's location can be queried
+            if (Identity.FindESIKeyWithAccess(CCPAPICharacterMethods.CharacterInfo) == null)
                 return EveMonConstants.UnknownText;
 
             // Check if in an NPC station or in an outpost
@@ -529,9 +525,8 @@ namespace EVEMon.Common.Models
             if (String.IsNullOrEmpty(LastKnownLocation))
                 return EveMonConstants.UnknownText;
             
-            // Show the tooltip on when the user provides api key
-            APIKey apiKey = Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.CharacterInfo);
-            if (apiKey == null)
+            // Show the docking info only when the character's location can be queried
+            if (Identity.FindESIKeyWithAccess(CCPAPICharacterMethods.CharacterInfo) == null)
                 return EveMonConstants.UnknownText;
 
             // Check if in an NPC station or in an outpost

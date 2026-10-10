@@ -111,10 +111,9 @@ namespace EVEMon.SettingsUI
                 switch (Settings.UI.SystemTrayPopup.GroupBy)
                 {
                     case TrayPopupGrouping.None:
-                        return charactersList;
                     case TrayPopupGrouping.Account:
-                        newCharacters.AddRange(charactersList.Where(x => x.Identity.APIKeys.Any()));
-                        return newCharacters.GroupBy(AccountAPIKeyOrDefault).SelectMany(y => y);
+                        // ESI does not tell which characters share an account
+                        return charactersList;
                     case TrayPopupGrouping.TrainingAtTop:
                         newCharacters.AddRange(charactersList.Where(x => x.IsTraining));
                         newCharacters.AddRange(charactersList.Where(x => !x.IsTraining));
@@ -128,15 +127,6 @@ namespace EVEMon.SettingsUI
                 }
             }
         }
-
-        /// <summary>
-        /// Returns the API key for characters in the same account or the default one.
-        /// </summary>
-        /// <param name="character">The character.</param>
-        /// <returns>The API key for characters in the same account; otherwise the default API key of the character</returns>
-        private static APIKey AccountAPIKeyOrDefault(Character character) => character.Identity.APIKeys
-            .First(apiKey => EveMonClient.MonitoredCharacters
-                .Any(monitoredCharacter => monitoredCharacter.Identity.APIKeys.Contains(apiKey)));
 
         /// <summary>
         /// Performs the custom layout.
@@ -154,50 +144,7 @@ namespace EVEMon.SettingsUI
             IEnumerable<Character> characters = GetCharacters;
 
             // Add controls for characters
-            if (Settings.UI.SystemTrayPopup.GroupBy == TrayPopupGrouping.Account &&
-                Settings.UI.SystemTrayPopup.IndentGroupedAccounts)
-            {
-                List<APIKey> prevAPIKeys = new List<APIKey>();
-                foreach (Character character in characters)
-                {
-                    OverviewItem charPanel = GetOverviewItem(character);
-                    List<APIKey> apiKeys = character.Identity.APIKeys.ToList();
-
-                    if (!apiKeys.Exists(apiKey => prevAPIKeys.Contains(apiKey)))
-                    {
-                        MainFlowLayoutPanel.Controls.Add(charPanel);
-                        prevAPIKeys = apiKeys;
-                    }
-                    else
-                    {
-                        FlowLayoutPanel tempAccountGroupPanel = null;
-                        try
-                        {
-                            tempAccountGroupPanel = new FlowLayoutPanel();
-                            tempAccountGroupPanel.Controls.Add(charPanel);
-                            tempAccountGroupPanel.AutoSize = true;
-                            tempAccountGroupPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-                            tempAccountGroupPanel.FlowDirection = FlowDirection.TopDown;
-                            tempAccountGroupPanel.Padding = new Padding(10, 0, 0, 0);
-
-                            tempAccountGroupPanel.CreateControl();
-
-                            FlowLayoutPanel accountGroupPanel = tempAccountGroupPanel;
-                            tempAccountGroupPanel = null;
-
-                            MainFlowLayoutPanel.Controls.Add(accountGroupPanel);
-                        }
-                        finally
-                        {
-                            tempAccountGroupPanel?.Dispose();
-                        }
-
-                        prevAPIKeys = apiKeys;
-                    }
-                }
-            }
-            else
-                MainFlowLayoutPanel.Controls.AddRange(characters.Select(GetOverviewItem).ToArray<Control>());
+            MainFlowLayoutPanel.Controls.AddRange(characters.Select(GetOverviewItem).ToArray<Control>());
         }
 
         /// <summary>
@@ -233,15 +180,6 @@ namespace EVEMon.SettingsUI
         /// </summary>
         private void PerformSupplementalControlsLayout()
         {
-            // Skip if the user do not want to be warned about accounts not in training
-            string warningMessage;
-            if (Settings.UI.SystemTrayPopup.ShowWarning && APIKey.HasCharactersNotTraining(out warningMessage))
-            {
-                FlowLayoutPanel warningPanel = CreateAccountsNotTrainingPanel(warningMessage);
-                if (!MainFlowLayoutPanel.IsDisposed)
-                    MainFlowLayoutPanel.Controls.Add(warningPanel);
-            }
-
             // Server Status
             if (Settings.UI.SystemTrayPopup.ShowServerStatus)
             {
@@ -263,84 +201,6 @@ namespace EVEMon.SettingsUI
                     UpdateEveTimeLabel();
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a panel contains the warning message for accounts not in training.
-        /// </summary>
-        /// <param name="warningMessage"></param>
-        /// <returns></returns>
-        private static FlowLayoutPanel CreateAccountsNotTrainingPanel(string warningMessage)
-        {
-            // Create a flowlayout to hold the content
-            FlowLayoutPanel warningPanel;
-            FlowLayoutPanel tempWarningPanel = null;
-            try
-            {
-                tempWarningPanel = new FlowLayoutPanel
-                {
-                    AutoSize = true,
-                    AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                    Margin = new Padding(0, 0, 0, 2)
-                };
-
-                // Add a picture on the left with a warning icon
-                if (!Settings.UI.SafeForWork)
-                {
-                    int portraitSize = Int32.Parse(Settings.UI.SystemTrayPopup.PortraitSize.ToString().Substring(1),
-                                                   CultureConstants.InvariantCulture);
-
-                    PictureBox tempPictureBoxWarning = null;
-                    try
-                    {
-                        tempPictureBoxWarning = new PictureBox();
-                        tempPictureBoxWarning.Image = SystemIcons.Warning.ToBitmap();
-                        tempPictureBoxWarning.SizeMode = PictureBoxSizeMode.StretchImage;
-                        tempPictureBoxWarning.Size = new Size(portraitSize, portraitSize);
-                        tempPictureBoxWarning.Margin = new Padding(2);
-
-                        PictureBox pbWarning = tempPictureBoxWarning;
-                        tempPictureBoxWarning = null;
-
-                        tempWarningPanel.Controls.Add(pbWarning);
-                    }
-                    finally
-                    {
-                        tempPictureBoxWarning?.Dispose();
-                    }
-                }
-
-                // Adds a label to hold the message
-                Label tempLabelMessage = null;
-                try
-                {
-                    tempLabelMessage = new Label
-                    {
-                        AutoSize = true,
-                        Text = warningMessage
-                    };
-
-                    Label lblMessage = tempLabelMessage;
-                    tempLabelMessage = null;
-
-                    tempWarningPanel.Controls.Add(lblMessage);
-                }
-                finally
-                {
-                    tempLabelMessage?.Dispose();
-                }
-
-                tempWarningPanel.CreateControl();
-
-                warningPanel = tempWarningPanel;
-                tempWarningPanel = null;
-            }
-            finally
-            {
-                tempWarningPanel?.Dispose();
-            }
-
-            return warningPanel;
         }
 
         /// <summary>

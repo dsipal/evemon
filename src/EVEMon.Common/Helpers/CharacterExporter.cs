@@ -157,16 +157,7 @@ namespace EVEMon.Common.Helpers
                 builder.AppendLine($"{skill.Name}={skill.Level}");
             }
 
-            APIKey apiKey = character.Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.CharacterSheet);
-
-            if (apiKey == null)
-                return builder.ToString();
-
-            builder
-                .AppendLine($"KeyID={apiKey.ID}")
-                .AppendLine($"VCode={apiKey.VerificationCode}")
-                .Append($"CharID={character.CharacterID}");
-
+            // The XML API key (KeyID/VCode) used to be appended here; EVE SSO tokens must not be shared
             return builder.ToString();
         }
 

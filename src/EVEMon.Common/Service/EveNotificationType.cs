@@ -102,6 +102,10 @@ namespace EVEMon.Common.Service
             // Update the file if we don't have it or the data have expired
             if (!File.Exists(filename) || (s_loaded && s_cachedUntil < DateTime.UtcNow))
             {
+                // Use the copy shipped with EVEMon meanwhile
+                if (!s_loaded)
+                    EnsureInitialized();
+
                 Task.WhenAll(UpdateFileAsync());
                 return;
             }

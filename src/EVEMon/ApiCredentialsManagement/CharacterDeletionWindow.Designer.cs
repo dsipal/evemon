@@ -113,7 +113,7 @@
             this.deleteAPIKeyCheckBox.Name = "deleteAPIKeyCheckBox";
             this.deleteAPIKeyCheckBox.Size = new System.Drawing.Size(154, 17);
             this.deleteAPIKeyCheckBox.TabIndex = 5;
-            this.deleteAPIKeyCheckBox.Text = "Delete the API key{0} also.";
+            this.deleteAPIKeyCheckBox.Text = "Also remove its EVE SSO authorization.";
             this.deleteAPIKeyCheckBox.UseVisualStyleBackColor = true;
             // 
             // noCharactersLabel
@@ -123,7 +123,7 @@
             this.noCharactersLabel.Name = "noCharactersLabel";
             this.noCharactersLabel.Size = new System.Drawing.Size(245, 13);
             this.noCharactersLabel.TabIndex = 6;
-            this.noCharactersLabel.Text = "There will be no characters left on the API key{0} :";
+            this.noCharactersLabel.Text = "EVE SSO authorization of this character:";
             // 
             // apiKeyslistView
             // 

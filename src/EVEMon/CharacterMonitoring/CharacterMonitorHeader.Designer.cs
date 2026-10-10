@@ -195,7 +195,7 @@
             // 
             this.ChangeAPIKeyInfoMenuItem.Name = "ChangeAPIKeyInfoMenuItem";
             this.ChangeAPIKeyInfoMenuItem.Size = new System.Drawing.Size(233, 22);
-            this.ChangeAPIKeyInfoMenuItem.Text = "Change API Key Information...";
+            this.ChangeAPIKeyInfoMenuItem.Text = "Authorize Again with EVE SSO...";
             this.ChangeAPIKeyInfoMenuItem.Click += new System.EventHandler(this.ChangeAPIKeyInfoMenuItem_Click);
             // 
             // QueryEverythingMenuItem

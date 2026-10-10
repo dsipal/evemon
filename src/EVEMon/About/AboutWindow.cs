@@ -196,7 +196,6 @@ namespace EVEMon.About
             AddLinkToLabel(eveCentralLinkLabel, "EVE-Central", "http://www.eve-central.com/");
             AddLinkToLabel(eveMarketDataLinkLabel, "EVE-MarketData", "http://eve-marketdata.com/");
             AddLinkToLabel(googleApisLinkLabel, "Google", "https://github.com/google/google-api-dotnet-client/");
-            AddLinkToLabel(dropboxSDKLinkLabel, "Dropbox", "https://github.com/dropbox/dropbox-sdk-dotnet/");
             AddLinkToLabel(oneDriveSDKLinkLabel, "Microsoft OneDrive", "https://github.com/OneDrive/onedrive-sdk-csharp/");
             AddLinkToLabel(lironLeviLinkLabel, "Liron Levi", "http://www.codeproject.com/Articles/37397/A-Multipanel-Control-in-C/");
             AddLinkToLabel(stackOverflowLinkLabel, "Stack Overflow", "http://stackoverflow.com/");

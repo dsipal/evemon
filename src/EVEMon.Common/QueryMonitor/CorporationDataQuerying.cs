@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using EVEMon.Common.Esi;
 using EVEMon.Common.Enumerations;
 using EVEMon.Common.Enumerations.CCPAPI;
 using EVEMon.Common.Interfaces;
@@ -118,15 +119,12 @@ namespace EVEMon.Common.QueryMonitor
                 return;
 
             // Quits if access denied
-            APIKey apiKey = m_ccpCharacter.Identity.FindAPIKeyWithAccess(CCPAPICorporationMethods.CorporationContracts);
-            if (apiKey == null)
+            ESIKey esiKey = m_ccpCharacter.Identity.FindESIKeyWithAccess(CCPAPICorporationMethods.CorporationContracts);
+            if (esiKey == null)
                 return;
 
-            EveMonClient.APIProviders.CurrentProvider.QueryMethodAsync<SerializableAPIContractBids>(
-                CCPAPIGenericMethods.CorporationContractBids,
-                apiKey.ID,
-                apiKey.VerificationCode,
-                m_ccpCharacter.CharacterID,
+            EsiQueries.QueryAsync<SerializableAPIContractBids>(
+                CCPAPIGenericMethods.CorporationContractBids, esiKey, m_ccpCharacter.CharacterID,
                 OnCorporationContractBidsUpdated);
         }
 

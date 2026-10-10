@@ -95,6 +95,12 @@ namespace EVEMon.Common.Net
         public Uri Url { get; }
 
         /// <summary>
+        /// Gets the HTTP status code returned by the server, if the request got a response.
+        /// </summary>
+        /// <value>The HTTP status code, or <c>null</c>.</value>
+        public HttpStatusCode? ResponseStatusCode { get; private set; }
+
+        /// <summary>
         /// Gets the name of the host.
         /// </summary>
         /// <value>The name of the host.</value>
@@ -123,8 +129,30 @@ namespace EVEMon.Common.Net
                 ? ParseWebRequestException(webException, url, GetProxyHost(url), out status)
                 : ParseHttpRequestException(httpRequestException, httpStatusCode, url, GetProxyHost(url), out status);
 
-            return new HttpWebClientServiceException(status, ex, url, msg);
+            return new HttpWebClientServiceException(status, ex, url, msg)
+            {
+                ResponseStatusCode = httpRequestException != null && httpStatusCode != HttpStatusCode.OK
+                    ? httpStatusCode
+                    : (webException?.Response as HttpWebResponse)?.StatusCode
+            };
         }
+
+        /// <summary>
+        /// Factory method to create an HttpWebServiceException for a failed ESI or EVE SSO request.
+        /// </summary>
+        /// <param name="url">The url of the request that failed.</param>
+        /// <param name="statusCode">The HTTP status code of the response, if any.</param>
+        /// <param name="message">The error message.</param>
+        /// <param name="ex">The underlying exception, if any.</param>
+        /// <returns></returns>
+        internal static HttpWebClientServiceException EsiException(Uri url, HttpStatusCode? statusCode, string message,
+            Exception ex = null)
+            => new HttpWebClientServiceException(
+                statusCode.HasValue ? HttpWebClientServiceExceptionStatus.ServerError : HttpWebClientServiceExceptionStatus.Exception,
+                ex, url, message)
+            {
+                ResponseStatusCode = statusCode
+            };
 
         /// <summary>
         /// Gets the proxy host.
@@ -134,7 +162,8 @@ namespace EVEMon.Common.Net
         private static string GetProxyHost(Uri url)
             => HttpWebClientServiceState.Proxy.Enabled
                 ? HttpWebClientServiceState.Proxy.Host
-                : WebRequest.DefaultWebProxy.GetProxy(url).Host;
+                // .NET Core returns no proxy (null) for direct connections, .NET Framework returned the url itself
+                : WebRequest.DefaultWebProxy?.GetProxy(url)?.Host ?? url.Host;
 
         /// <summary>
         /// Parses a web exception to get an error message and a <see cref="HttpWebClientServiceExceptionStatus"/> status code.

@@ -15,21 +15,55 @@ namespace EVEMon.Common.Service
 {
     public static class ImageService
     {
+        // The EVE image server; it replaced image.eveonline.com and imageserver.eveonline.com
+        private const string ImageServer = "https://images.evetech.net";
+
+        private static readonly Regex s_legacyPath = new Regex(@"^/(?<category>[a-z]+)/(?<id>\d+)_(?<size>\d+)\.(?:jpg|png)$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         /// <summary>
         /// Gets the image server CDN URI.
         /// </summary>
-        /// <param name="path">The path.</param>
+        /// <param name="path">The path, in the legacy image server format (e.g. "/type/587_64.png").</param>
         /// <returns></returns>
-        public static Uri GetImageServerCdnUri(string path)
-            => new Uri($"{NetworkConstants.EVEImageServerCDN}{path}");
+        public static Uri GetImageServerCdnUri(string path) => GetImageServerUri(path);
 
         /// <summary>
         /// Gets the image server base URI.
         /// </summary>
-        /// <param name="path">The path.</param>
+        /// <param name="path">The path, in the legacy image server format (e.g. "/type/587_64.png").</param>
         /// <returns></returns>
-        public static Uri GetImageServerBaseUri(string path)
-            => new Uri($"{NetworkConstants.EVEImageServerBase}{path}");
+        public static Uri GetImageServerBaseUri(string path) => GetImageServerUri(path);
+
+        /// <summary>
+        /// Translates a legacy image server path ("/{category}/{id}_{size}.png") to the current image server
+        /// ("/{category}s/{id}/{variation}?size={size}").
+        /// </summary>
+        /// <param name="path">The legacy path.</param>
+        /// <returns></returns>
+        private static Uri GetImageServerUri(string path)
+        {
+            Match match = s_legacyPath.Match(path ?? String.Empty);
+            if (!match.Success)
+                return new Uri($"{ImageServer}{path}");
+
+            string id = match.Groups["id"].Value;
+            string size = match.Groups["size"].Value;
+
+            switch (match.Groups["category"].Value.ToLowerInvariant())
+            {
+                case "character":
+                    return new Uri($"{ImageServer}/characters/{id}/portrait?size={size}");
+                case "corporation":
+                    return new Uri($"{ImageServer}/corporations/{id}/logo?size={size}");
+                case "alliance":
+                    return new Uri($"{ImageServer}/alliances/{id}/logo?size={size}");
+                case "render":
+                    return new Uri($"{ImageServer}/types/{id}/render?size={size}");
+                default:
+                    return new Uri($"{ImageServer}/types/{id}/icon?size={size}");
+            }
+        }
 
         /// <summary>
         /// Asynchronously downloads a character portrait from its ID.

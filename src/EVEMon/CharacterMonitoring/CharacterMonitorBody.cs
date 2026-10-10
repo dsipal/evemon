@@ -134,7 +134,7 @@ namespace EVEMon.CharacterMonitoring
         private void OnDisposed(object sender, EventArgs e)
         {
             EveMonClient.TimerTick -= EveMonClient_TimerTick;
-            EveMonClient.APIKeyInfoUpdated -= EveMonClient_APIKeyInfoUpdated;
+            EveMonClient.ESIKeyInfoUpdated -= EveMonClient_ESIKeyInfoUpdated;
             EveMonClient.SettingsChanged -= EveMonClient_SettingsChanged;
             EveMonClient.CharacterAssetsUpdated -= EveMonClient_UpdatePageControls;
             EveMonClient.MarketOrdersUpdated -= EveMonClient_UpdatePageControls;
@@ -165,7 +165,7 @@ namespace EVEMon.CharacterMonitoring
             try
             {
                 // Hides or shows the warning about a character with no API key
-                warningLabel.Visible = !m_character.Identity.APIKeys.Any();
+                warningLabel.Visible = m_character.Identity.ESIKey == null;
             }
             finally
             {
@@ -237,7 +237,7 @@ namespace EVEMon.CharacterMonitoring
         /// </summary>
         private void UpdateFeaturesMenu()
         {
-            if (EveMonClient.APIKeys.Any(apiKey => !apiKey.IsProcessed) || !m_character.Identity.APIKeys.Any())
+            if (EveMonClient.ESIKeys.Any(esiKey => !esiKey.IsProcessed) || m_character.Identity.ESIKey == null)
                 return;
 
             CCPCharacter ccpCharacter = m_character as CCPCharacter;
@@ -473,7 +473,7 @@ namespace EVEMon.CharacterMonitoring
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
-        private void EveMonClient_APIKeyInfoUpdated(object sender, EventArgs e)
+        private void EveMonClient_ESIKeyInfoUpdated(object sender, EventArgs e)
         {
             UpdateFeaturesMenu();
         }
@@ -1644,7 +1644,7 @@ namespace EVEMon.CharacterMonitoring
                 skillQueueIcon.Visible = employmentIcon.Visible = false;
 
             // Subscribe event
-            EveMonClient.APIKeyInfoUpdated += EveMonClient_APIKeyInfoUpdated;
+            EveMonClient.ESIKeyInfoUpdated += EveMonClient_ESIKeyInfoUpdated;
         }
 
         /// <summary>

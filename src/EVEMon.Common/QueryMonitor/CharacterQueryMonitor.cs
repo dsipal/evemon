@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using EVEMon.Common.Enumerations.CCPAPI;
+using EVEMon.Common.Esi;
 using EVEMon.Common.Extensions;
 using EVEMon.Common.Models;
 using EVEMon.Common.Serialization.Eve;
@@ -14,7 +14,7 @@ namespace EVEMon.Common.QueryMonitor
     public sealed class CharacterQueryMonitor<T> : QueryMonitor<T>
     {
         private readonly Character m_character;
-        private APIKey m_apiKey;
+        private ESIKey m_esiKey;
 
         /// <summary>
         /// Constructor.
@@ -32,7 +32,7 @@ namespace EVEMon.Common.QueryMonitor
         /// Gets the required API key information are known.
         /// </summary>
         /// <returns>False if an API key was required and not found.</returns>
-        protected override bool HasAPIKey => m_character.Identity.APIKeys.Any(apiKey => apiKey.IsCharacterOrAccountType);
+        protected override bool HasAPIKey => m_character.Identity.ESIKey != null;
 
         /// <summary>
         /// Gets a value indicating whether this monitor has access to data.
@@ -44,8 +44,8 @@ namespace EVEMon.Common.QueryMonitor
         {
             get
             {
-                m_apiKey = m_character.Identity.FindAPIKeyWithAccess((CCPAPICharacterMethods)Method);
-                return m_apiKey != null;
+                m_esiKey = m_character.Identity.FindESIKeyWithAccess(Method);
+                return m_esiKey != null;
             }
         }
 
@@ -59,7 +59,7 @@ namespace EVEMon.Common.QueryMonitor
         {
             provider.ThrowIfNull(nameof(provider));
 
-            provider.QueryMethodAsync(Method, m_apiKey.ID, m_apiKey.VerificationCode, m_character.CharacterID, callback);
+            EsiQueries.QueryAsync(Method, m_esiKey, m_character.CharacterID, callback);
         }
     }
 }

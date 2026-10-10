@@ -7,7 +7,7 @@ using EVEMon.Common;
 using EVEMon.Common.Constants;
 using EVEMon.Common.Controls;
 using EVEMon.Common.CustomEventArgs;
-using EVEMon.Common.Enumerations.CCPAPI;
+using EVEMon.Common.Enumerations;
 using EVEMon.Common.Factories;
 using EVEMon.Common.Models;
 
@@ -47,11 +47,10 @@ namespace EVEMon.ApiCredentialsManagement
 
             ListViewHelper.EnableDoubleBuffer(charactersListView);
 
-            EveMonClient.APIKeyCollectionChanged += EveMonClient_APIKeyCollectionChanged;
-            EveMonClient.APIKeyInfoUpdated += EveMonClient_APIKeyInfoUpdated;
+            EveMonClient.ESIKeyCollectionChanged += EveMonClient_ESIKeyCollectionChanged;
+            EveMonClient.ESIKeyInfoUpdated += EveMonClient_ESIKeyInfoUpdated;
             EveMonClient.CharacterCollectionChanged += EveMonClient_CharacterCollectionChanged;
             EveMonClient.CharacterUpdated += EveMonClient_CharacterUpdated;
-            EveMonClient.AccountStatusUpdated += EveMonClient_AccountStatusUpdated;
             Disposed += OnDisposing;
 
             UpdateAPIKeysList();
@@ -71,11 +70,10 @@ namespace EVEMon.ApiCredentialsManagement
         private void OnDisposing(object sender, EventArgs e)
         {
             // Unsubscribe events
-            EveMonClient.APIKeyCollectionChanged -= EveMonClient_APIKeyCollectionChanged;
-            EveMonClient.APIKeyInfoUpdated -= EveMonClient_APIKeyInfoUpdated;
+            EveMonClient.ESIKeyCollectionChanged -= EveMonClient_ESIKeyCollectionChanged;
+            EveMonClient.ESIKeyInfoUpdated -= EveMonClient_ESIKeyInfoUpdated;
             EveMonClient.CharacterCollectionChanged -= EveMonClient_CharacterCollectionChanged;
             EveMonClient.CharacterUpdated -= EveMonClient_CharacterUpdated;
-            EveMonClient.AccountStatusUpdated -= EveMonClient_AccountStatusUpdated;
 
             // Update the monitored status of selected characters
             foreach (KeyValuePair<Character, bool> monitoredCharacter in m_monitoredCharacters
@@ -105,7 +103,7 @@ namespace EVEMon.ApiCredentialsManagement
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void EveMonClient_APIKeyCollectionChanged(object sender, EventArgs e)
+        private void EveMonClient_ESIKeyCollectionChanged(object sender, EventArgs e)
         {
             UpdateAPIKeysList();
         }
@@ -115,7 +113,7 @@ namespace EVEMon.ApiCredentialsManagement
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void EveMonClient_APIKeyInfoUpdated(object sender, EventArgs e)
+        private void EveMonClient_ESIKeyInfoUpdated(object sender, EventArgs e)
         {
             if (!Visible)
                 return;
@@ -143,19 +141,6 @@ namespace EVEMon.ApiCredentialsManagement
             UpdateCharactersList();
         }
 
-        /// <summary>
-        /// When the account status updates, we update the content.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void EveMonClient_AccountStatusUpdated(object sender, EventArgs e)
-        {
-            if (!Visible)
-                return;
-
-            apiKeysListBox.Invalidate();
-        }
-
         #endregion
 
 
@@ -169,8 +154,8 @@ namespace EVEMon.ApiCredentialsManagement
             if (!Visible)
                 return;
 
-            apiKeysListBox.APIKeys = EveMonClient.APIKeys;
-            apiKeysMultiPanel.SelectedPage = EveMonClient.APIKeys.Any() ? apiKeysListPage : noAPIKeysPage;
+            apiKeysListBox.ESIKeys = EveMonClient.ESIKeys;
+            apiKeysMultiPanel.SelectedPage = EveMonClient.ESIKeys.Any() ? apiKeysListPage : noAPIKeysPage;
         }
 
         /// <summary>
@@ -183,7 +168,7 @@ namespace EVEMon.ApiCredentialsManagement
             bool itemClicked = false;
 
             // Search for the clicked item
-            for (int index = 0; index < apiKeysListBox.APIKeys.Count(); index++)
+            for (int index = 0; index < apiKeysListBox.ESIKeys.Count(); index++)
             {
                 Rectangle rect = apiKeysListBox.GetItemRectangle(index);
 
@@ -202,8 +187,8 @@ namespace EVEMon.ApiCredentialsManagement
                 if (e.Button == MouseButtons.Middle || !cbRect.Contains(e.Location))
                     continue;
 
-                APIKey apiKey = apiKeysListBox.APIKeys.ElementAt(index);
-                apiKey.Monitored = !apiKey.Monitored;
+                ESIKey esiKey = apiKeysListBox.ESIKeys.ElementAt(index);
+                esiKey.Monitored = !esiKey.Monitored;
                 apiKeysListBox.Invalidate();
             }
 
@@ -231,7 +216,7 @@ namespace EVEMon.ApiCredentialsManagement
         {
             // Search for the double-clicked item
             int index = 0;
-            foreach (APIKey apiKey in apiKeysListBox.APIKeys)
+            foreach (ESIKey esiKey in apiKeysListBox.ESIKeys)
             {
                 Rectangle rect = apiKeysListBox.GetItemRectangle(index);
                 index++;
@@ -239,8 +224,8 @@ namespace EVEMon.ApiCredentialsManagement
                 if (!rect.Contains(e.Location))
                     continue;
 
-                // Open the edition window
-                using (ApiKeyUpdateOrAdditionWindow window = new ApiKeyUpdateOrAdditionWindow(apiKey))
+                // Authorize the character again
+                using (EsiAuthorizationWindow window = new EsiAuthorizationWindow(esiKey))
                 {
                     window.ShowDialog(this);
                     return;
@@ -255,8 +240,8 @@ namespace EVEMon.ApiCredentialsManagement
         /// <param name="e"></param>
         private void editAPIKeyMenu_Click(object sender, EventArgs e)
         {
-            APIKey apiKey = apiKeysListBox.APIKeys.ElementAt(apiKeysListBox.SelectedIndex);
-            using (ApiKeyUpdateOrAdditionWindow window = new ApiKeyUpdateOrAdditionWindow(apiKey))
+            ESIKey esiKey = apiKeysListBox.ESIKeys.ElementAt(apiKeysListBox.SelectedIndex);
+            using (EsiAuthorizationWindow window = new EsiAuthorizationWindow(esiKey))
             {
                 window.ShowDialog(this);
             }
@@ -269,7 +254,7 @@ namespace EVEMon.ApiCredentialsManagement
         /// <param name="e"></param>
         private void addAPIKeyMenu_Click(object sender, EventArgs e)
         {
-            using (ApiKeyUpdateOrAdditionWindow window = new ApiKeyUpdateOrAdditionWindow())
+            using (EsiAuthorizationWindow window = new EsiAuthorizationWindow())
             {
                 window.ShowDialog(this);
             }
@@ -285,8 +270,8 @@ namespace EVEMon.ApiCredentialsManagement
             if (apiKeysListBox.SelectedIndex == -1)
                 return;
 
-            APIKey apiKey = apiKeysListBox.APIKeys.ElementAt(apiKeysListBox.SelectedIndex);
-            using (ApiKeyDeletionWindow window = new ApiKeyDeletionWindow(apiKey))
+            ESIKey esiKey = apiKeysListBox.ESIKeys.ElementAt(apiKeysListBox.SelectedIndex);
+            using (ApiKeyDeletionWindow window = new ApiKeyDeletionWindow(esiKey))
             {
                 window.ShowDialog(this);
             }
@@ -352,15 +337,15 @@ namespace EVEMon.ApiCredentialsManagement
                 charactersListView.Groups.Clear();
                 charactersListView.Items.Clear();
 
-                // Grouping (no API key, API key #1, API key #2, character files, character urls)
+                // Grouping (not authorized, authorized with EVE SSO, character files, character urls)
                 bool isGrouping = groupingMenu.Checked;
-                ListViewGroup noAPIKeyGroup = new ListViewGroup("No API key");
+                ListViewGroup noESIKeyGroup = new ListViewGroup("Not authorized (cached data only)");
+                ListViewGroup esiKeyGroup = new ListViewGroup("Authorized with EVE SSO");
                 ListViewGroup fileGroup = new ListViewGroup("Character files");
                 ListViewGroup urlGroup = new ListViewGroup("Character urls");
-                Dictionary<APIKey, ListViewGroup> apiKeyGroups = new Dictionary<APIKey, ListViewGroup>();
 
                 if (isGrouping)
-                    ArrangeByGroup(fileGroup, apiKeyGroups, noAPIKeyGroup, urlGroup);
+                    ArrangeByGroup(noESIKeyGroup, esiKeyGroup, fileGroup, urlGroup);
 
                 // Add items
                 foreach (Character character in EveMonClient.Characters.OrderBy(x => x.Name))
@@ -368,10 +353,10 @@ namespace EVEMon.ApiCredentialsManagement
                     ListViewItem item = new ListViewItem { Checked = character.Monitored, Tag = character };
 
                     // Retrieve the texts for the different columns
-                    IEnumerable<APIKey> apiKeys = character.Identity.APIKeys.OrderBy(apiKey => apiKey.ID);
-                    string apiKeyIDText = apiKeys.Any()
-                                              ? String.Join(", ", apiKeys.Select(apiKey => apiKey.ID))
-                                              : String.Empty;
+                    ESIKey esiKey = character.Identity.ESIKey;
+                    string esiKeyText = esiKey == null
+                        ? String.Empty
+                        : esiKey.State == ESIKeyState.NeedsAuthorization ? "Must be authorized again" : "Authorized";
                     string typeText = "CCP";
                     string uriText = "-";
 
@@ -386,17 +371,7 @@ namespace EVEMon.ApiCredentialsManagement
                     }
                         // Grouping CCP characters
                     else if (isGrouping)
-                    {
-                        if (!apiKeys.Any())
-                            item.Group = noAPIKeyGroup;
-                        else
-                        {
-                            APIKey accountTypeAPIKey = apiKeys.FirstOrDefault(apiKey => apiKey.Type == CCPAPIKeyType.Account);
-                            item.Group = accountTypeAPIKey != null
-                                             ? apiKeyGroups[accountTypeAPIKey]
-                                             : apiKeyGroups[apiKeys.First()];
-                        }
-                    }
+                        item.Group = esiKey == null ? noESIKeyGroup : esiKeyGroup;
 
                     // Add the item and its subitems
                     item.SubItems.Add(new ListViewItem.ListViewSubItem(item, typeText));
@@ -404,7 +379,7 @@ namespace EVEMon.ApiCredentialsManagement
                                                                        character.CharacterID.ToString(
                                                                            CultureConstants.DefaultCulture)));
                     item.SubItems.Add(new ListViewItem.ListViewSubItem(item, character.Name));
-                    item.SubItems.Add(new ListViewItem.ListViewSubItem(item, apiKeyIDText));
+                    item.SubItems.Add(new ListViewItem.ListViewSubItem(item, esiKeyText));
                     item.SubItems.Add(new ListViewItem.ListViewSubItem(item, uriText));
 
                     charactersListView.Items.Add(item);
@@ -430,62 +405,24 @@ namespace EVEMon.ApiCredentialsManagement
         }
 
         /// <summary>
-        /// Arranges the by group.
+        /// Adds the groups that have characters.
         /// </summary>
-        /// <param name="fileGroup">The file group.</param>
-        /// <param name="apiKeyGroups">The API key groups.</param>
-        /// <param name="noAPIKeyGroup">The no API key group.</param>
-        /// <param name="urlGroup">The URL group.</param>
-        private void ArrangeByGroup(ListViewGroup fileGroup, Dictionary<APIKey, ListViewGroup> apiKeyGroups,
-                                    ListViewGroup noAPIKeyGroup, ListViewGroup urlGroup)
+        private void ArrangeByGroup(ListViewGroup noESIKeyGroup, ListViewGroup esiKeyGroup, ListViewGroup fileGroup,
+            ListViewGroup urlGroup)
         {
-            bool hasNoAPIKey = false;
-            bool hasFileChars = false;
-            bool hasUrlChars = false;
+            List<UriCharacter> uriCharacters = EveMonClient.Characters.OfType<UriCharacter>().ToList();
+            List<CCPCharacter> ccpCharacters = EveMonClient.Characters.OfType<CCPCharacter>().ToList();
 
-            // Scroll through listview items to gather the groups
-            foreach (Character character in EveMonClient.Characters)
-            {
-                UriCharacter uriCharacter = character as UriCharacter;
+            if (ccpCharacters.Any(character => character.Identity.ESIKey == null))
+                charactersListView.Groups.Add(noESIKeyGroup);
 
-                // Uri character ?
-                if (uriCharacter != null)
-                {
-                    if (uriCharacter.Uri.IsFile)
-                        hasFileChars = true;
-                    else
-                        hasUrlChars = true;
-                }
-                // CCP character ?
-                else
-                {
-                    if (!character.Identity.APIKeys.Any())
-                        hasNoAPIKey = true;
-                    else
-                    {
-                        foreach (APIKey apiKey in character.Identity.APIKeys.Where(
-                            apiKey => !apiKeyGroups.ContainsKey(apiKey)))
-                        {
-                            apiKeyGroups.Add(apiKey,
-                                new ListViewGroup($"Key ID #{apiKey.ID}"));
-                        }
-                    }
-                }
-            }
+            if (ccpCharacters.Any(character => character.Identity.ESIKey != null))
+                charactersListView.Groups.Add(esiKeyGroup);
 
-            // Add the groups
-            if (hasNoAPIKey)
-                charactersListView.Groups.Add(noAPIKeyGroup);
-
-            foreach (ListViewGroup group in apiKeyGroups.Values)
-            {
-                charactersListView.Groups.Add(group);
-            }
-
-            if (hasFileChars)
+            if (uriCharacters.Any(character => character.Uri.IsFile))
                 charactersListView.Groups.Add(fileGroup);
 
-            if (hasUrlChars)
+            if (uriCharacters.Any(character => !character.Uri.IsFile))
                 charactersListView.Groups.Add(urlGroup);
         }
 

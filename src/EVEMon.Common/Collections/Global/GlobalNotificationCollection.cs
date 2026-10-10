@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using EVEMon.Common.Enumerations;
+using EVEMon.Common.Enumerations.CCPAPI;
 using EVEMon.Common.Extensions;
 using EVEMon.Common.Models;
 using EVEMon.Common.Notifications;
@@ -210,7 +211,7 @@ namespace EVEMon.Common.Collections.Global
         /// Notifies a server status querying error.
         /// </summary>
         /// <param name="result">The result.</param>
-        internal void NotifyServerStatusError(CCPAPIResult<SerializableAPIServerStatus> result)
+        internal void NotifyServerStatusError(IAPIResult result)
         {
             APIErrorNotificationEventArgs notification =
                 new APIErrorNotificationEventArgs(null, result)
@@ -225,59 +226,32 @@ namespace EVEMon.Common.Collections.Global
         #endregion
 
 
-        #region API key info errors
+        #region ESI key errors
 
         /// <summary>
-        /// Invalidates the notification for an API key's info error.
+        /// Invalidates the notification for an ESI key error.
         /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        internal void InvalidateAPIKeyInfoError(APIKey apiKey)
+        /// <param name="esiKey">The ESI key.</param>
+        internal void InvalidateESIKeyError(ESIKey esiKey)
         {
-            Invalidate(new NotificationInvalidationEventArgs(apiKey, NotificationCategory.QueryingError));
+            Invalidate(new NotificationInvalidationEventArgs(esiKey, NotificationCategory.QueryingError));
         }
 
         /// <summary>
-        /// Notifies an API key's characters list querying error.
+        /// Notifies that a character's EVE SSO authorization could not be used.
         /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        /// <param name="result">The result.</param>
-        internal void NotifyCharacterListError(APIKey apiKey, CCPAPIResult<SerializableAPIKeyInfo> result)
+        /// <param name="esiKey">The ESI key.</param>
+        /// <param name="message">The error message.</param>
+        internal void NotifyESIKeyError(ESIKey esiKey, string message)
         {
+            string description = esiKey.State == ESIKeyState.NeedsAuthorization
+                ? $"{esiKey.CharacterName} must be authorized again with EVE SSO (File > Manage Characters)."
+                : $"An error occurred while checking the EVE SSO authorization of {esiKey.CharacterName}.";
+
             APIErrorNotificationEventArgs notification =
-                new APIErrorNotificationEventArgs(apiKey, result)
+                new APIErrorNotificationEventArgs(esiKey, new CCPAPIResult<object>(CCPAPIErrors.Http, message))
                 {
-                    Description = $"An error occurred while querying the character list for API key {apiKey}.",
-                    Behaviour = NotificationBehaviour.Overwrite,
-                    Priority = NotificationPriority.Error
-                };
-            Notify(notification);
-        }
-
-        #endregion
-
-
-        #region Account status errors
-
-        /// <summary>
-        /// Invalidates the notification for an account status error.
-        /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        internal void InvalidateAccountStatusError(APIKey apiKey)
-        {
-            Invalidate(new NotificationInvalidationEventArgs(apiKey, NotificationCategory.QueryingError));
-        }
-
-        /// <summary>
-        /// Notifies an account status querying error.
-        /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        /// <param name="result">The result.</param>
-        internal void NotifyAccountStatusError(APIKey apiKey, CCPAPIResult<SerializableAPIAccountStatus> result)
-        {
-            APIErrorNotificationEventArgs notification =
-                new APIErrorNotificationEventArgs(apiKey, result)
-                {
-                    Description = $"An error occurred while querying the account status for API key {apiKey}.",
+                    Description = description,
                     Behaviour = NotificationBehaviour.Overwrite,
                     Priority = NotificationPriority.Error
                 };
@@ -880,102 +854,6 @@ namespace EVEMon.Common.Collections.Global
                     Description = "An error occured while querying the planetary links.",
                     Behaviour = NotificationBehaviour.Overwrite,
                     Priority = NotificationPriority.Error
-                };
-            Notify(notification);
-        }
-
-        #endregion
-
-
-        #region API key expiration
-
-        /// <summary>
-        /// Invalidates the notification for an API key expiration.
-        /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        internal void InvalidateAPIKeyExpiration(APIKey apiKey)
-        {
-            Invalidate(new NotificationInvalidationEventArgs(apiKey, NotificationCategory.APIKeyExpiration));
-        }
-
-        /// <summary>
-        /// Notifies an API key is to expire within a week.
-        /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        /// <param name="expireDate">The expire date.</param>
-        /// <param name="priority">The priority.</param>
-        internal void NotifyAPIKeyExpiration(APIKey apiKey, DateTime expireDate, NotificationPriority priority)
-        {
-            NotificationEventArgs notification =
-                new NotificationEventArgs(apiKey, NotificationCategory.APIKeyExpiration)
-                {
-                    Description =
-                        $"This API key expires in {expireDate.ToRemainingTimeShortDescription(DateTimeKind.Utc)} ({apiKey}).",
-                    Behaviour = NotificationBehaviour.Overwrite,
-                    Priority = priority
-                };
-            Notify(notification);
-        }
-
-        #endregion
-
-
-        #region Account expiration
-
-        /// <summary>
-        /// Invalidates the notification for an account expiration.
-        /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        internal void InvalidateAccountExpiration(APIKey apiKey)
-        {
-            Invalidate(new NotificationInvalidationEventArgs(apiKey, NotificationCategory.AccountExpiration));
-        }
-
-        /// <summary>
-        /// Notifies an account is to expire within a week.
-        /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        /// <param name="expireDate">The expire date.</param>
-        /// <param name="priority">The priority.</param>
-        internal void NotifyAccountExpiration(APIKey apiKey, DateTime expireDate, NotificationPriority priority)
-        {
-            NotificationEventArgs notification =
-                new NotificationEventArgs(apiKey, NotificationCategory.AccountExpiration)
-                {
-                    Description =
-                        $"This account expires in {expireDate.ToRemainingTimeShortDescription(DateTimeKind.Utc)}: {apiKey}.",
-                    Behaviour = NotificationBehaviour.Overwrite,
-                    Priority = priority
-                };
-            Notify(notification);
-        }
-
-        #endregion
-
-
-        #region Account not in training
-
-        /// <summary>
-        /// Invalidates the notification for an account's characters list querying error.
-        /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        internal void InvalidateAccountNotInTraining(APIKey apiKey)
-        {
-            Invalidate(new NotificationInvalidationEventArgs(apiKey, NotificationCategory.AccountNotInTraining));
-        }
-
-        /// <summary>
-        /// Notifies an account has no character training.
-        /// </summary>
-        /// <param name="apiKey">The API key.</param>
-        internal void NotifyAccountNotInTraining(APIKey apiKey)
-        {
-            NotificationEventArgs notification =
-                new NotificationEventArgs(apiKey, NotificationCategory.AccountNotInTraining)
-                {
-                    Description = $"This account has no characters in training: {apiKey}.",
-                    Behaviour = NotificationBehaviour.Overwrite,
-                    Priority = NotificationPriority.Warning
                 };
             Notify(notification);
         }

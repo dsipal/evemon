@@ -1229,7 +1229,7 @@ namespace EVEMon.CharacterMonitoring
             this.warningLabel.Name = "warningLabel";
             this.warningLabel.Size = new System.Drawing.Size(608, 17);
             this.warningLabel.TabIndex = 1;
-            this.warningLabel.Text = "This character has no associated API key, data won\'t be updated.";
+            this.warningLabel.Text = "This character is not authorized with EVE SSO, data won\'t be updated (File > Add Character).";
             this.warningLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // notificationList

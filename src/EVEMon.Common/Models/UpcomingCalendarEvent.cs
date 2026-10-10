@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using EVEMon.Common.Esi;
 using EVEMon.Common.Enumerations.CCPAPI;
 using EVEMon.Common.Serialization.Eve;
 
@@ -111,15 +112,12 @@ namespace EVEMon.Common.Models
             m_queryPending = true;
 
             // Quits if access denied
-            APIKey apiKey = m_ccpCharacter.Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.CalendarEventAttendees);
-            if (apiKey == null)
+            ESIKey esiKey = m_ccpCharacter.Identity.FindESIKeyWithAccess(CCPAPICharacterMethods.CalendarEventAttendees);
+            if (esiKey == null)
                 return;
 
-            EveMonClient.APIProviders.CurrentProvider.QueryMethodAsync<SerializableAPICalendarEventAttendees>(
-                CCPAPICharacterMethods.CalendarEventAttendees,
-                apiKey.ID,
-                apiKey.VerificationCode,
-                m_ccpCharacter.CharacterID,
+            EsiQueries.QueryAsync<SerializableAPICalendarEventAttendees>(
+                CCPAPICharacterMethods.CalendarEventAttendees, esiKey, m_ccpCharacter.CharacterID,
                 m_eventID,
                 OnCalendarEventAttendeesDownloaded);
         }

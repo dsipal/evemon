@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -14,7 +13,7 @@ namespace EVEMon.ApiCredentialsManagement
     public partial class CharacterDeletionWindow : EVEMonForm
     {
         private readonly Character m_character;
-        private List<APIKey> m_apiKeys;
+        private ESIKey m_esiKey;
 
         /// <summary>
         /// Constructor.
@@ -52,47 +51,34 @@ namespace EVEMon.ApiCredentialsManagement
             characterToRemoveLabel.Text = String.Format(CultureConstants.DefaultCulture,
                                                         characterToRemoveLabel.Text, m_character.Name);
 
-            // Find the API keys bind only to this character
-            m_apiKeys = EveMonClient.APIKeys.Select(
-                apiKey => new { apiKey, identities = apiKey.CharacterIdentities }).Where(
-                    apiKey => apiKey.identities.Count() == 1 && apiKey.identities.Contains(m_character.Identity)).Select(
-                        apiKey => apiKey.apiKey).ToList();
+            // The character's EVE SSO authorization, if any
+            m_esiKey = (m_character as CCPCharacter)?.Identity.ESIKey;
+            bool hasESIKey = m_esiKey != null;
 
-            apiKeyslistView.Items.AddRange(m_apiKeys.Select(
-                apiKey => new ListViewItem(apiKey.ID.ToString(CultureConstants.DefaultCulture))).ToArray());
+            if (hasESIKey)
+                apiKeyslistView.Items.Add(new ListViewItem(m_esiKey.ToString()));
 
-            // Checks whether there will be no characters left after this deletion and hide/display the relevant labels
-            bool noCharactersLeft = m_apiKeys.Any() && m_character is CCPCharacter;
-            deleteAPIKeyCheckBox.Text = String.Format(CultureConstants.DefaultCulture, deleteAPIKeyCheckBox.Text,
-                                                      m_apiKeys.Count > 1 ? "s" : String.Empty);
-            noCharactersLabel.Text = String.Format(CultureConstants.DefaultCulture, noCharactersLabel.Text,
-                                                   m_apiKeys.Count > 1 ? "s" : String.Empty);
+            deleteAPIKeyCheckBox.Checked = hasESIKey;
+            deleteAPIKeyCheckBox.Visible = hasESIKey;
+            noCharactersLabel.Visible = hasESIKey;
 
-            deleteAPIKeyCheckBox.Visible = noCharactersLeft;
-            noCharactersLabel.Visible = noCharactersLeft;
-
-            // Resize window if there is no API key to remove
-            if (!noCharactersLeft)
+            // Resize window if there is no authorization to remove
+            if (!hasESIKey)
                 Size = new Size(Size.Width, Size.Height - apiKeyslistView.Height / 2);
-
         }
 
         /// <summary>
-        /// Delete button click.
+        /// Deletes the character and, when checked, its authorization.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void deleteButton_Click(object sender, EventArgs e)
         {
-            // Either delete this character only or the whole API key
-            if (deleteAPIKeyCheckBox.Checked)
-            {
-                // Note: Keep this order of removal
-                m_apiKeys.ForEach(apiKey => EveMonClient.APIKeys.Remove(apiKey));
-                EveMonClient.Characters.Remove(m_character);
-            }
-            else
-                EveMonClient.Characters.Remove(m_character);
+            // Note: Keep this order of removal
+            if (deleteAPIKeyCheckBox.Checked && m_esiKey != null)
+                EveMonClient.ESIKeys.Remove(m_esiKey);
+
+            EveMonClient.Characters.Remove(m_character);
 
             Close();
         }

@@ -177,8 +177,8 @@ namespace EVEMon.DetailsWindow
             // Set the data points
             foreach (WalletJournal journal in m_ccpCharacter.WalletJournal.OrderByDescending(journal => journal.Date))
             {
-                using (DataPoint dataPoint = new DataPoint())
                 {
+                    DataPoint dataPoint = new DataPoint();
                     dataPoint.SetValueXY(journal.Date.ToLocalTime(), journal.Balance);
                     dataPoint.ToolTip = $"{journal.Date.ToLocalTime():G}{Environment.NewLine}{journal.Balance:N2} ISK";
 
@@ -198,8 +198,8 @@ namespace EVEMon.DetailsWindow
             // Set the data points for the first chart
             foreach (WalletJournal journal in m_ccpCharacter.WalletJournal.OrderByDescending(journal => journal.Date))
             {
-                using (DataPoint dataPoint = new DataPoint())
                 {
+                    DataPoint dataPoint = new DataPoint();
                     dataPoint.SetValueXY(journal.Date.ToLocalTime(), journal.Amount);
                     dataPoint.Color = journal.Amount < 0 ? Color.DarkRed : Color.DarkGreen;
                     dataPoint.ToolTip = $"{journal.Date.ToLocalTime():G}{Environment.NewLine}{journal.Amount:N2} ISK";
@@ -210,8 +210,8 @@ namespace EVEMon.DetailsWindow
             }
 
             // Set the data points for the second chart
-            using (DataPoint positiveSumDataPoint = new DataPoint())
             {
+                DataPoint positiveSumDataPoint = new DataPoint();
                 decimal positiveSum =
                     m_ccpCharacter.WalletJournal.Where(journal => journal.Amount > 0).Sum(journal => journal.Amount);
                 positiveSumDataPoint.SetValueXY(0, positiveSum);
@@ -221,8 +221,8 @@ namespace EVEMon.DetailsWindow
                 AmountChart.Series[1].Points.Add(positiveSumDataPoint.Clone());
             }
 
-            using (DataPoint negativeSumDataPoint = new DataPoint())
             {
+                DataPoint negativeSumDataPoint = new DataPoint();
                 decimal negativeSum =
                     m_ccpCharacter.WalletJournal.Where(journal => journal.Amount < 0).Sum(journal => journal.Amount);
                 negativeSumDataPoint.SetValueXY(0, negativeSum);

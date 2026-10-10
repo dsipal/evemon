@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using EVEMon.Common.Esi;
 using EVEMon.Common.Enumerations.CCPAPI;
 using EVEMon.Common.Enumerations.UISettings;
 using EVEMon.Common.Extensions;
@@ -66,7 +67,10 @@ namespace EVEMon.SettingsUI
         {
             get
             {
-                List<Enum> apiMethods = APIMethods.Methods.Where(x => x.HasHeader()).ToList();
+                // Only the methods available on ESI can be scheduled
+                List<Enum> apiMethods = APIMethods.Methods
+                    .Where(x => x.HasHeader() && (EsiQueries.IsSupported(x) || CCPAPIGenericMethods.ServerStatus.Equals(x)))
+                    .ToList();
 
                 // Group the methods by usage
                 List<Enum> methods =
@@ -124,9 +128,6 @@ namespace EVEMon.SettingsUI
 
             if (method.Equals(CCPAPICharacterMethods.IndustryJobs))
                 m_settings.Periods[CCPAPICorporationMethods.CorporationIndustryJobs.ToString()] = periods[combo.SelectedIndex];
-
-            if (method.Equals(CCPAPIGenericMethods.CharacterList))
-                m_settings.Periods[CCPAPIGenericMethods.APIKeyInfo.ToString()] = periods[combo.SelectedIndex];
 
             m_settings.Periods[method.ToString()] = periods[combo.SelectedIndex];
         }

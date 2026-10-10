@@ -7,6 +7,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Resources;
+using System.Resources.Extensions;
 using System.Windows.Forms;
 using EVEMon.Common;
 using EVEMon.Common.Constants;
@@ -439,7 +440,7 @@ namespace EVEMon.SkillPlanner
 
                 try
                 {
-                    defaultGroupReader = new ResourceReader(defaultResourcesPath);
+                    defaultGroupReader = new DeserializingResourceReader(defaultResourcesPath);
 
                     basicx = defaultGroupReader.GetEnumerator();
 
@@ -456,7 +457,7 @@ namespace EVEMon.SkillPlanner
                 IResourceReader groupReader = null;
                 try
                 {
-                    groupReader = new ResourceReader(groupResourcesPath);
+                    groupReader = new DeserializingResourceReader(groupResourcesPath);
 
                     basicx = groupReader.GetEnumerator();
 

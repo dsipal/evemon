@@ -95,7 +95,7 @@ namespace EVEMon.ApiCredentialsManagement
             this.apiKeysLabel.Name = "apiKeysLabel";
             this.apiKeysLabel.Size = new System.Drawing.Size(50, 13);
             this.apiKeysLabel.TabIndex = 1;
-            this.apiKeysLabel.Text = "API Keys";
+            this.apiKeysLabel.Text = "EVE SSO";
             // 
             // charactersLabel
             // 
@@ -116,7 +116,7 @@ namespace EVEMon.ApiCredentialsManagement
             this.apiKeyListLabel.Name = "apiKeyListLabel";
             this.apiKeyListLabel.Size = new System.Drawing.Size(796, 318);
             this.apiKeyListLabel.TabIndex = 0;
-            this.apiKeyListLabel.Text = "First add your API key using the above buttons.";
+            this.apiKeyListLabel.Text = "Use Add to log in with EVE SSO and authorize a character.";
             this.apiKeyListLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // charactersListLabel
@@ -127,7 +127,7 @@ namespace EVEMon.ApiCredentialsManagement
             this.charactersListLabel.Name = "charactersListLabel";
             this.charactersListLabel.Size = new System.Drawing.Size(796, 318);
             this.charactersListLabel.TabIndex = 10;
-            this.charactersListLabel.Text = "First add your API key at API Keys section, characters will then appear in this l" +
+            this.charactersListLabel.Text = "First authorize a character in the EVE SSO section, it will then appear in this l" +
     "ist.\r\nYou can also import XML character sheets from files or URLs.";
             this.charactersListLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -251,7 +251,7 @@ namespace EVEMon.ApiCredentialsManagement
             // 
             // columnAPIKeyID
             // 
-            this.columnAPIKeyID.Text = "Key ID";
+            this.columnAPIKeyID.Text = "EVE SSO";
             this.columnAPIKeyID.Width = 75;
             // 
             // columnUri
@@ -333,7 +333,7 @@ namespace EVEMon.ApiCredentialsManagement
             this.apiKeysTabPage.Padding = new System.Windows.Forms.Padding(3);
             this.apiKeysTabPage.Size = new System.Drawing.Size(802, 362);
             this.apiKeysTabPage.TabIndex = 0;
-            this.apiKeysTabPage.Text = "API Keys";
+            this.apiKeysTabPage.Text = "EVE SSO";
             this.apiKeysTabPage.UseVisualStyleBackColor = true;
             // 
             // apiKeysPagePanel
@@ -412,7 +412,7 @@ namespace EVEMon.ApiCredentialsManagement
             this.addAPIKeyMenu.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.addAPIKeyMenu.Name = "addAPIKeyMenu";
             this.addAPIKeyMenu.Size = new System.Drawing.Size(58, 22);
-            this.addAPIKeyMenu.Text = "&Add...";
+            this.addAPIKeyMenu.Text = "&Add Character...";
             this.addAPIKeyMenu.Click += new System.EventHandler(this.addAPIKeyMenu_Click);
             // 
             // deleteAPIKeyMenu
@@ -422,7 +422,7 @@ namespace EVEMon.ApiCredentialsManagement
             this.deleteAPIKeyMenu.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.deleteAPIKeyMenu.Name = "deleteAPIKeyMenu";
             this.deleteAPIKeyMenu.Size = new System.Drawing.Size(69, 22);
-            this.deleteAPIKeyMenu.Text = "&Delete...";
+            this.deleteAPIKeyMenu.Text = "&Remove...";
             this.deleteAPIKeyMenu.Click += new System.EventHandler(this.deleteAPIKeyMenu_Click);
             // 
             // editAPIKeyMenu
@@ -432,7 +432,7 @@ namespace EVEMon.ApiCredentialsManagement
             this.editAPIKeyMenu.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.editAPIKeyMenu.Name = "editAPIKeyMenu";
             this.editAPIKeyMenu.Size = new System.Drawing.Size(56, 22);
-            this.editAPIKeyMenu.Text = "&Edit...";
+            this.editAPIKeyMenu.Text = "&Authorize Again...";
             this.editAPIKeyMenu.Click += new System.EventHandler(this.editAPIKeyMenu_Click);
             // 
             // ApiKeysManagementWindow
@@ -448,7 +448,7 @@ namespace EVEMon.ApiCredentialsManagement
             this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(600, 400);
             this.Name = "ApiKeysManagementWindow";
-            this.Text = "API Keys Management";
+            this.Text = "Characters Management";
             this.tabControl.ResumeLayout(false);
             this.charactersTabPage.ResumeLayout(false);
             this.charactersTabPage.PerformLayout();

@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using EVEMon.Common.Collections;
 using EVEMon.Common.Constants;
-using EVEMon.Common.Enumerations.CCPAPI;
+using EVEMon.Common.Esi;
 using EVEMon.Common.Helpers;
+using EVEMon.Common.Net;
 using EVEMon.Common.Serialization;
 using EVEMon.Common.Serialization.Eve;
+using EVEMon.Common.Threading;
 
 namespace EVEMon.Common.Service
 {
@@ -152,43 +155,52 @@ namespace EVEMon.Common.Service
         }
 
         /// <summary>
-        /// Queries the API Character Name.
+        /// Queries ESI for the names of the given IDs.
         /// </summary>
-        /// <param name="idsToQuery">The ids to query.</param>
+        /// <param name="idsToQuery">The IDs to query.</param>
         private static void QueryAPICharacterName(IList<string> idsToQuery)
         {
-            string ids = string.Join(",", idsToQuery);
+            List<long> ids = new List<long>();
+            foreach (string id in idsToQuery)
+            {
+                long value;
+                if (Int64.TryParse(id, NumberStyles.Integer, CultureConstants.InvariantCulture, out value) && value > 0)
+                    ids.Add(value);
+            }
 
-            if (String.IsNullOrWhiteSpace(ids))
+            if (!ids.Any())
                 return;
 
             // Add the ids to the queried list
             s_queriedIDs.AddRange(idsToQuery);
 
-            EveMonClient.APIProviders.CurrentProvider.QueryMethodAsync<SerializableAPICharacterName>(
-                CCPAPIGenericMethods.CharacterName, ids, OnQueryAPICharacterNameUpdated);
+            Task.Run(() => EsiNameResolver.GetNamesAsync(ids))
+                .ContinueWith(task => Dispatcher.Invoke(() => OnNamesQueried(idsToQuery, task)));
         }
 
         /// <summary>
-        /// Called when the query updated.
+        /// Processes the names returned by ESI.
         /// </summary>
-        /// <param name="result">The result.</param>
-        private static void OnQueryAPICharacterNameUpdated(CCPAPIResult<SerializableAPICharacterName> result)
+        /// <param name="queriedIDs">The queried IDs.</param>
+        /// <param name="task">The query task.</param>
+        private static void OnNamesQueried(IList<string> queriedIDs, Task<IDictionary<long, string>> task)
         {
-            // Checks if EVE database is out of service
-            if (result.EVEDatabaseError)
-                return;
-
-            if (result.HasError)
+            if (task.IsFaulted)
             {
-                EveMonClient.Notifications.NotifyCharacterNameError(result);
+                // Allow the IDs to be queried again later
+                s_queriedIDs.RemoveAll(queriedIDs.Contains);
+
+                HttpWebClientServiceException exception = task.Exception?.GetBaseException() as HttpWebClientServiceException;
+                if (exception != null)
+                    EveMonClient.Notifications.NotifyCharacterNameError(new CCPAPIResult<SerializableAPICharacterName>(exception));
+
                 return;
             }
 
             EveMonClient.Notifications.InvalidateAPIError();
 
             // Deserialize the result
-            Import(result.Result.Entities);
+            Import(task.Result.Select(name => new SerializableCharacterNameListItem { ID = name.Key, Name = name.Value }));
 
             // Notify the subscribers
             EveMonClient.OnEveIDToNameUpdated();

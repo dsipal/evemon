@@ -77,7 +77,6 @@ namespace EVEMon
             this.tsmiManagePlans = new System.Windows.Forms.ToolStripMenuItem();
             this.plansSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.apiTesterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.charactersComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataBrowserMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.skillBrowserMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -127,7 +126,6 @@ namespace EVEMon
             this.tsbManagePlans = new System.Windows.Forms.ToolStripButton();
             this.plansTbMenu = new System.Windows.Forms.ToolStripDropDownButton();
             this.plansToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
-            this.apiTesterToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.characterComparisonToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.tsbMineralSheet = new System.Windows.Forms.ToolStripButton();
             this.skillsPieChartTbMenu = new System.Windows.Forms.ToolStripButton();
@@ -366,7 +364,7 @@ namespace EVEMon
             this.addAPIKeyMenu.Image = ((System.Drawing.Image)(resources.GetObject("addAPIKeyMenu.Image")));
             this.addAPIKeyMenu.Name = "addAPIKeyMenu";
             this.addAPIKeyMenu.Size = new System.Drawing.Size(174, 22);
-            this.addAPIKeyMenu.Text = "&Add API Key...";
+            this.addAPIKeyMenu.Text = "&Add Character...";
             this.addAPIKeyMenu.Click += new System.EventHandler(this.addAPIKeyMenu_Click);
             // 
             // manageAPIKeysMenuItem
@@ -374,7 +372,7 @@ namespace EVEMon
             this.manageAPIKeysMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("manageAPIKeysMenuItem.Image")));
             this.manageAPIKeysMenuItem.Name = "manageAPIKeysMenuItem";
             this.manageAPIKeysMenuItem.Size = new System.Drawing.Size(174, 22);
-            this.manageAPIKeysMenuItem.Text = "&Manage API Keys...";
+            this.manageAPIKeysMenuItem.Text = "&Manage Characters...";
             this.manageAPIKeysMenuItem.Click += new System.EventHandler(this.manageAPIKeysMenuItem_Click);
             // 
             // fileManagerHideToolStripSeparator
@@ -531,7 +529,6 @@ namespace EVEMon
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.apiTesterToolStripMenuItem,
             this.charactersComparisonMenuItem,
             this.dataBrowserMenuItem,
             this.skillsPieChartMenuItem,
@@ -543,14 +540,6 @@ namespace EVEMon
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
             this.toolsToolStripMenuItem.Text = "&Tools";
-            // 
-            // apiTesterToolStripMenuItem
-            // 
-            this.apiTesterToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("apiTesterToolStripMenuItem.Image")));
-            this.apiTesterToolStripMenuItem.Name = "apiTesterToolStripMenuItem";
-            this.apiTesterToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
-            this.apiTesterToolStripMenuItem.Text = "&API Tester...";
-            this.apiTesterToolStripMenuItem.Click += new System.EventHandler(this.apiTesterToolStripMenuItem_Click);
             // 
             // charactersComparisonMenuItem
             // 
@@ -794,7 +783,6 @@ namespace EVEMon
             this.tsbManagePlans,
             this.plansTbMenu,
             this.plansToolStripSeparator,
-            this.apiTesterToolStripButton,
             this.characterComparisonToolStripButton,
             this.tsbMineralSheet,
             this.skillsPieChartTbMenu,
@@ -819,7 +807,7 @@ namespace EVEMon
             this.addAPIKeyTbMenu.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.addAPIKeyTbMenu.Name = "addAPIKeyTbMenu";
             this.addAPIKeyTbMenu.Size = new System.Drawing.Size(23, 22);
-            this.addAPIKeyTbMenu.ToolTipText = "Add API key";
+            this.addAPIKeyTbMenu.ToolTipText = "Add character (EVE SSO)";
             this.addAPIKeyTbMenu.Click += new System.EventHandler(this.addAPIKeyMenu_Click);
             // 
             // apiKeysManagementTbMenu
@@ -828,7 +816,7 @@ namespace EVEMon
             this.apiKeysManagementTbMenu.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.apiKeysManagementTbMenu.Name = "apiKeysManagementTbMenu";
             this.apiKeysManagementTbMenu.Size = new System.Drawing.Size(23, 22);
-            this.apiKeysManagementTbMenu.ToolTipText = "Manage accounts";
+            this.apiKeysManagementTbMenu.ToolTipText = "Manage characters";
             this.apiKeysManagementTbMenu.Click += new System.EventHandler(this.manageAPIKeysMenuItem_Click);
             // 
             // apiKeysSettingsToolStripSeparator
@@ -977,16 +965,6 @@ namespace EVEMon
             // 
             this.plansToolStripSeparator.Name = "plansToolStripSeparator";
             this.plansToolStripSeparator.Size = new System.Drawing.Size(6, 25);
-            // 
-            // apiTesterToolStripButton
-            // 
-            this.apiTesterToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.apiTesterToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("apiTesterToolStripButton.Image")));
-            this.apiTesterToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.apiTesterToolStripButton.Name = "apiTesterToolStripButton";
-            this.apiTesterToolStripButton.Size = new System.Drawing.Size(23, 22);
-            this.apiTesterToolStripButton.Text = "API Tester...";
-            this.apiTesterToolStripButton.Click += new System.EventHandler(this.apiTesterToolStripMenuItem_Click);
             // 
             // characterComparisonToolStripButton
             // 
@@ -1146,8 +1124,8 @@ namespace EVEMon
             this.noCharactersLabel.Name = "noCharactersLabel";
             this.noCharactersLabel.Size = new System.Drawing.Size(600, 503);
             this.noCharactersLabel.TabIndex = 8;
-            this.noCharactersLabel.Text = "No character loaded or monitored\r\n\r\nTo add characters, click the File > Add API k" +
-    "ey... menu option\r\nTo monitor characters, click the File > Manage API Keys... me" +
+            this.noCharactersLabel.Text = "No character loaded or monitored\r\n\r\nTo add characters, click the File > Add Char" +
+    "acter... menu option\r\nTo monitor characters, click the File > Manage Characters... me" +
     "nu option";
             this.noCharactersLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -1281,7 +1259,6 @@ namespace EVEMon
         private System.Windows.Forms.ToolStripMenuItem testTimeoutOneSecToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem clearCacheToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator plansSeparator;
-        private System.Windows.Forms.ToolStripButton apiTesterToolStripButton;
         private System.Windows.Forms.ToolStripButton characterComparisonToolStripButton;
         private System.Windows.Forms.ToolStripSeparator manageCharacterToolStripSeparator;
         private System.Windows.Forms.ToolStripSeparator cacheResetToolStripSeparator;
@@ -1308,7 +1285,6 @@ namespace EVEMon
         private System.Windows.Forms.ToolStripMenuItem tsmiCreatePlanFromSkillQueue;
         private System.Windows.Forms.ToolStripMenuItem readTheDocsManualToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem apiTesterToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem charactersComparisonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem dataBrowserMenuItem;
         private System.Windows.Forms.ToolStripMenuItem skillBrowserMenuItem;

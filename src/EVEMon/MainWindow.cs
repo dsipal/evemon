@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using EVEMon.About;
 using EVEMon.ApiCredentialsManagement;
-using EVEMon.ApiTester;
 using EVEMon.CharacterMonitoring;
 using EVEMon.CharactersComparison;
 using EVEMon.Common;
@@ -93,7 +92,6 @@ namespace EVEMon
 
             lblStatus.Text = $"EVE Time: {DateTime.UtcNow:HH:mm}";
             lblServerStatus.Text = $"|  {EveMonClient.EVEServer?.StatusText ?? EveMonConstants.UnknownText}";
-            Clients.Winforms.ViewBinders.ServerStatusViewBinder.registerForLegacyUIUpdate(lblServerStatus);
 
             tsDatafilesLoadingProgressBar.Step =
                 (int)Math.Ceiling((double)tsDatafilesLoadingProgressBar.Maximum / EveMonClient.Datafiles.Count);
@@ -181,9 +179,6 @@ namespace EVEMon
             // Check with NIST that the local clock is synchronized
             TimeCheck.ScheduleCheck(TimeSpan.FromSeconds(1));
 
-            // Notify Gooogle Analytics about start up
-            GAnalyticsTracker.TrackStart(GetType());
-
             // Prepare control's visibility
             menubarToolStripMenuItem.Checked = mainMenuBar.Visible = Settings.UI.MainWindow.ShowMenuBar;
             toolbarToolStripMenuItem.Checked = mainToolBar.Visible = !Settings.UI.MainWindow.ShowMenuBar;
@@ -225,8 +220,8 @@ namespace EVEMon
             // Welcome message
             TipWindow.ShowTip(this, "startup",
                 "Getting Started",
-                "To begin using EVEMon, click the File|Add API key... menu option, " +
-                "enter your CCP API information and choose the characters to monitor.");
+                "To begin using EVEMon, click the File|Add Character... menu option, " +
+                "log in with your EVE Online account in the browser and authorize the character.");
         }
 
         /// <summary>
@@ -296,10 +291,7 @@ namespace EVEMon
             // Is there a reason that we should really close the window
             if (!Visible || m_isUpdating || m_isUpdatingData || e.CloseReason == CloseReason.ApplicationExitCall ||
                 e.CloseReason == CloseReason.TaskManagerClosing || e.CloseReason == CloseReason.WindowsShutDown)
-            {
-                GAnalyticsTracker.TrackEnd(GetType());
                 return;
-            }
 
             // Should we actually exit ?
             if (Settings.UI.MainWindowCloseBehaviour == CloseBehaviour.Exit)
@@ -674,7 +666,6 @@ namespace EVEMon
         private void EveMonClient_ServerStatusUpdated(object sender, EveServerEventArgs e)
         {
             lblServerStatus.Text = $"|  {e.Server.StatusText}";
-            Common.Entities.ServerStatus.ServerStatus.onEvent();
         }
 
         /// <summary>
@@ -703,10 +694,10 @@ namespace EVEMon
             if (behaviour == ToolTipNotificationBehaviour.Never)
                 return;
 
-            // Add and reorder by API key and character
+            // Add and reorder by ESI key and character
             m_popupNotifications.Add(e);
 
-            // Group by API key
+            // Group by ESI key
             IEnumerable<IGrouping<long, NotificationEventArgs>> groups = m_popupNotifications
                 .GroupBy(
                     notification =>
@@ -715,9 +706,9 @@ namespace EVEMon
                         if (notification.Sender == null)
                             return 0;
 
-                        // It's an API key related notification
-                        if (notification.SenderAPIKey != null)
-                            return notification.SenderAPIKey.ID;
+                        // It's an ESI key related notification
+                        if (notification.SenderESIKey != null)
+                            return notification.SenderESIKey.ID;
 
                         // It's a corporation related notification
                         if (notification.SenderCorporation != null)
@@ -767,7 +758,7 @@ namespace EVEMon
             if (WindowState == FormWindowState.Minimized)
                 return;
 
-            notificationList.Notifications = EveMonClient.Notifications.Where(x => x.Sender == null || x.SenderAPIKey != null);
+            notificationList.Notifications = EveMonClient.Notifications.Where(x => x.Sender == null || x.SenderESIKey != null);
         }
 
         /// <summary>
@@ -1231,7 +1222,8 @@ namespace EVEMon
             m_isUpdatingData = true;
 
             // Find the expected path for 'EVEMon.Watchdog.exe'
-            string executable = typeof(WatchdogWindow).Assembly.Location;
+            // (the assembly location is the .dll; the .exe launcher sits next to it)
+            string executable = Path.ChangeExtension(typeof(WatchdogWindow).Assembly.Location, ".exe");
 
             // If the 'Watchdog' exist start the process
             if (File.Exists(executable))
@@ -1262,20 +1254,20 @@ namespace EVEMon
         #region Menus and toolbar
 
         /// <summary>
-        /// File > Add API key...
+        /// File > Add Character...
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void addAPIKeyMenu_Click(object sender, EventArgs e)
         {
-            using (ApiKeyUpdateOrAdditionWindow window = new ApiKeyUpdateOrAdditionWindow())
+            using (EsiAuthorizationWindow window = new EsiAuthorizationWindow())
             {
                 window.ShowDialog(this);
             }
         }
 
         /// <summary>
-        /// File > Manage API keys...
+        /// File > Manage Characters...
         /// Open the api keys management window.
         /// </summary>
         /// <param name="sender"></param>
@@ -1673,17 +1665,6 @@ namespace EVEMon
 
             // Show or bring to front if a window with the same plan as tag already exists
             PlanWindow.ShowPlanWindow(GetCurrentCharacter(), plan);
-        }
-
-        /// <summary>
-        /// Tools > API Tester.
-        /// Open the API tester window.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
-        private void apiTesterToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            WindowsFactory.ShowUnique<ApiTesterWindow>();
         }
 
         /// <summary>
@@ -2284,9 +2265,9 @@ namespace EVEMon
             m_apiProviderName = EveMonClient.APIProviders.CurrentProvider.Name;
             EveMonClient.EVEServer.ForceUpdate();
 
-            foreach (APIKey apiKey in EveMonClient.APIKeys)
+            foreach (ESIKey esiKey in EveMonClient.ESIKeys)
             {
-                apiKey.ForceUpdate();
+                esiKey.ForceUpdate();
             }
 
             foreach (CCPCharacter character in EveMonClient.MonitoredCharacters.OfType<CCPCharacter>())
@@ -2436,7 +2417,7 @@ namespace EVEMon
 
         private void debugESIEventToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Common.Entities.ServerStatus.ServerStatus.onEvent();
+            EveMonClient.EVEServer.ForceUpdate();
             Common.Entities.Dockable.onEvent(1025080492051);
         }
     }

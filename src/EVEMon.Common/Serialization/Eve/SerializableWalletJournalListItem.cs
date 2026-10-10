@@ -81,6 +81,12 @@ namespace EVEMon.Common.Serialization.Eve
             }
         }
 
+        /// <summary>
+        /// Gets or sets the name of the reference type, when the source provides it (ESI) instead of an ID.
+        /// </summary>
+        [XmlIgnore]
+        public string RefTypeName { get; set; }
+
         [XmlIgnore]
         public string OwnerName1 { get; set; }
 

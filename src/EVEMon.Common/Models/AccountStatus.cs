@@ -15,8 +15,6 @@ namespace EVEMon.Common.Models
         private const float trainingRateAlpha = 0.5f;
         private const float trainingRateOmega = 1.0f;
 
-        //TODO: Refactor to create IAPIKey interface and use dependency injection here
-
         /// <summary>
         /// Creates an AccountStatus object with defined type
         /// </summary>
@@ -26,28 +24,6 @@ namespace EVEMon.Common.Models
             CurrentStatus = statusType;
         }
 
-        /// <summary>
-        /// Creates an AccountStatus object from APIKey
-        /// </summary>
-        /// <param name="statusType">Type (Alpha, Omega, Unknown).</param>
-        public AccountStatus (APIKey apiKey)
-        {
-            if (apiKey == null || 
-                (apiKey != null &&  apiKey.Expiration < DateTime.UtcNow && apiKey.Expiration != DateTime.MinValue))
-            {
-                CurrentStatus = AccountStatusType.Unknown;
-            }
-            else
-            {
-                CurrentStatus = apiKey.AccountExpires > DateTime.UtcNow ?
-                   AccountStatusType.Omega :
-                   AccountStatusType.Alpha;
-            }
-        }
-        
-        /// <summary>
-        /// Spits out a friendly name for the Account Status
-        /// </summary>
         public override string ToString()
         {
             string accountTypeName;

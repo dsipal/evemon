@@ -1,0 +1,20 @@
+<Project>
+  <!-- Central NuGet package versions (https://learn.microsoft.com/nuget/consume-packages/central-package-management). -->
+  <ItemGroup>
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="RestSharp" Version="106.15.0" />
+    <PackageVersion Include="Google.Apis.Auth" Version="1.77.0" />
+    <PackageVersion Include="Google.Apis.Drive.v3" Version="1.77.0.4276" />
+    <PackageVersion Include="Google.Apis.Calendar.v3" Version="1.77.0.4285" />
+    <PackageVersion Include="SharpZipLib" Version="1.4.2" />
+    <PackageVersion Include="YamlDotNet" Version="18.1.0" />
+    <PackageVersion Include="WinForms.DataVisualization" Version="1.10.2" />
+
+    <PackageVersion Include="EntityFramework" Version="6.5.2" />
+
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Moq" Version="4.20.72" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace EVEMon.Common.Service
         private static Collection<SerializableEveFlagsListItem> s_eveFlags =
             new Collection<SerializableEveFlagsListItem>();
         private static bool s_isLoaded;
+        private static Dictionary<string, short> s_flagIDsByName;
         private static bool s_queryPending;
         private static DateTime s_nextCheckTime;
 
@@ -40,6 +42,30 @@ namespace EVEMon.Common.Service
         /// <summary>
         /// Ensures the eve flags data have been intialized.
         /// </summary>
+        /// <summary>
+        /// Gets the ID of a flag from its name (e.g. "Hangar", "HiSlot0"), as ESI returns it.
+        /// </summary>
+        /// <param name="flagName">The flag name.</param>
+        /// <returns>The flag ID, or 0 (None) if unknown.</returns>
+        internal static short GetFlagID(string flagName)
+        {
+            if (String.IsNullOrEmpty(flagName))
+                return 0;
+
+            if (s_flagIDsByName == null)
+            {
+                SerializableEveFlags flags = Util.DeserializeXmlFromString<SerializableEveFlags>(Properties.Resources.Flags,
+                    APIProvider.RowsetsTransform);
+                s_flagIDsByName = flags?.EVEFlags
+                    .GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(x => x.Key, x => (short)x.First().ID, StringComparer.OrdinalIgnoreCase)
+                    ?? new Dictionary<string, short>();
+            }
+
+            short id;
+            return s_flagIDsByName.TryGetValue(flagName, out id) ? id : (short)0;
+        }
+
         private static void EnsureInitialized()
         {
             if (s_isLoaded)
@@ -68,6 +94,9 @@ namespace EVEMon.Common.Service
             // Update the file if we don't have it
             if (!File.Exists(filename))
             {
+                // Use the copy shipped with EVEMon meanwhile
+                EnsureInitialized();
+
                 Task.WhenAll(UpdateFileAsync());
                 return;
             }

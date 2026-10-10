@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System;
 using System.Linq;
 using EVEMon.Common.Enumerations.CCPAPI;
+using EVEMon.Common.Esi;
 
 namespace EVEMon.Common.Models
 {
@@ -11,8 +11,6 @@ namespace EVEMon.Common.Models
     /// </summary>
     public sealed class CharacterIdentity
     {
-        private readonly Collection<APIKey> m_apiKeys;
-
         /// <summary>
         /// Constructor from an id and a name.
         /// </summary>
@@ -35,8 +33,6 @@ namespace EVEMon.Common.Models
             AllianceName = allianceName;
             FactionID = factionId;
             FactionName = factionName;
-
-            m_apiKeys = new Collection<APIKey>();
         }
 
         /// <summary>
@@ -96,38 +92,27 @@ namespace EVEMon.Common.Models
         public string FactionName { get; set; }
 
         /// <summary>
-        /// Gets the API keys this identity is associated with.
+        /// Gets the ESI key (EVE SSO authorization) of this character, or null if it has none.
         /// </summary>
-        public Collection<APIKey> APIKeys => m_apiKeys;
-
-        /// <summary>
-        /// Gets the character type API keys.
-        /// </summary>
-        /// <value>The character type API keys.</value>
-        public IEnumerable<APIKey> CharacterTypeAPIKeys => APIKeys.Where(apikey => apikey.IsCharacterOrAccountType);
-
-        /// <summary>
-        /// Gets the corporation type API keys.
-        /// </summary>
-        /// <value>The corporation type API keys.</value>
-        public IEnumerable<APIKey> CorporationTypeAPIKeys => APIKeys.Where(apikey => apikey.IsCorporationType);
+        public ESIKey ESIKey { get; internal set; }
 
         /// <summary>
         /// Gets a value indicating whether this instance can query character related info.
         /// </summary>
-        /// <value>
-        /// 	<c>true</c> if this instance can query character related info; otherwise, <c>false</c>.
-        /// </value>
-        public bool CanQueryCharacterInfo => CharacterTypeAPIKeys.Any(apiKey => apiKey.Monitored);
-
+        public bool CanQueryCharacterInfo => ESIKey != null && ESIKey.Monitored;
 
         /// <summary>
         /// Gets a value indicating whether this instance can query corporation related info.
         /// </summary>
-        /// <value>
-        /// 	<c>true</c> if this instance can query corporation related info; otherwise, <c>false</c>.
-        /// </value>
-        public bool CanQueryCorporationInfo => CorporationTypeAPIKeys.Any(apiKey => apiKey.Monitored);
+        /// <remarks>On ESI, corporation data is read with the character's token and in-game roles.</remarks>
+        public bool CanQueryCorporationInfo => ESIKey != null && ESIKey.Monitored &&
+                                               new Enum[]
+                                               {
+                                                   CCPAPICorporationMethods.CorporationMedals,
+                                                   CCPAPICorporationMethods.CorporationMarketOrders,
+                                                   CCPAPICorporationMethods.CorporationContracts,
+                                                   CCPAPICorporationMethods.CorporationIndustryJobs
+                                               }.Any(method => EsiQueries.HasAccess(ESIKey, method));
 
         /// <summary>
         /// Gets the CCP character representing this identity, or null when there is none.
@@ -137,21 +122,13 @@ namespace EVEMon.Common.Models
                 .FirstOrDefault(character => character.CharacterID == CharacterID);
 
         /// <summary>
-        /// Finds the API key with access to the specified API method.
+        /// Finds the ESI key with access to the specified method.
         /// </summary>
         /// <param name="method">The method.</param>
-        /// <returns>The API key with access to the specified method or null if non found.</returns>
-        public APIKey FindAPIKeyWithAccess(CCPAPICharacterMethods method)
-            => CharacterTypeAPIKeys
-                .FirstOrDefault(apiKey => apiKey.Monitored && (ulong)method == (apiKey.AccessMask & (ulong)method));
-
-        /// <summary>
-        /// Finds the API key with access to the specified API method.
-        /// </summary>
-        /// <param name="method">The method.</param>
-        /// <returns>The API key with access to the specified method or null if non found.</returns>
-        public APIKey FindAPIKeyWithAccess(CCPAPICorporationMethods method)
-            => CorporationTypeAPIKeys
-                .FirstOrDefault(apiKey => apiKey.Monitored && (ulong)method == (apiKey.AccessMask & (ulong)method));
+        /// <returns>
+        /// The ESI key, or null if the character has none, if it lacks the needed scopes,
+        /// or if the method is not available on ESI yet.
+        /// </returns>
+        public ESIKey FindESIKeyWithAccess(Enum method) => EsiQueries.HasAccess(ESIKey, method) ? ESIKey : null;
     }
 }

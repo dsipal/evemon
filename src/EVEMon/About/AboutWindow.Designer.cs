@@ -56,7 +56,6 @@ namespace EVEMon.About
             this.eveCentralLinkLabel = new System.Windows.Forms.LinkLabel();
             this.eveMarketDataLinkLabel = new System.Windows.Forms.LinkLabel();
             this.googleApisLinkLabel = new System.Windows.Forms.LinkLabel();
-            this.dropboxSDKLinkLabel = new System.Windows.Forms.LinkLabel();
             this.oneDriveSDKLinkLabel = new System.Windows.Forms.LinkLabel();
             this.lironLeviLinkLabel = new System.Windows.Forms.LinkLabel();
             this.battleClinicLinkLabel = new System.Windows.Forms.LinkLabel();
@@ -302,7 +301,6 @@ namespace EVEMon.About
             this.credentialsFlowLayoutPanel.Controls.Add(this.eveCentralLinkLabel);
             this.credentialsFlowLayoutPanel.Controls.Add(this.eveMarketDataLinkLabel);
             this.credentialsFlowLayoutPanel.Controls.Add(this.googleApisLinkLabel);
-            this.credentialsFlowLayoutPanel.Controls.Add(this.dropboxSDKLinkLabel);
             this.credentialsFlowLayoutPanel.Controls.Add(this.oneDriveSDKLinkLabel);
             this.credentialsFlowLayoutPanel.Controls.Add(this.lironLeviLinkLabel);
             this.credentialsFlowLayoutPanel.Controls.Add(this.battleClinicLinkLabel);
@@ -405,19 +403,6 @@ namespace EVEMon.About
             this.googleApisLinkLabel.TabIndex = 10;
             this.googleApisLinkLabel.Text = "Google for their API SDK.";
             this.googleApisLinkLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabel_LinkClicked);
-            // 
-            // dropboxSDKLinkLabel
-            // 
-            this.dropboxSDKLinkLabel.AutoSize = true;
-            this.dropboxSDKLinkLabel.LinkArea = new System.Windows.Forms.LinkArea(0, 0);
-            this.dropboxSDKLinkLabel.Location = new System.Drawing.Point(0, 159);
-            this.dropboxSDKLinkLabel.Margin = new System.Windows.Forms.Padding(0);
-            this.dropboxSDKLinkLabel.Name = "dropboxSDKLinkLabel";
-            this.dropboxSDKLinkLabel.Padding = new System.Windows.Forms.Padding(5, 3, 0, 3);
-            this.dropboxSDKLinkLabel.Size = new System.Drawing.Size(138, 19);
-            this.dropboxSDKLinkLabel.TabIndex = 17;
-            this.dropboxSDKLinkLabel.Text = "Dropbox for their API SDK.";
-            this.dropboxSDKLinkLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabel_LinkClicked);
             // 
             // oneDriveSDKLinkLabel
             // 
@@ -549,7 +534,6 @@ namespace EVEMon.About
         private System.Windows.Forms.LinkLabel lironLeviLinkLabel;
         private System.Windows.Forms.LinkLabel stackOverflowLinkLabel;
         private System.Windows.Forms.Label DevelopmentTeamLabel;
-        private System.Windows.Forms.LinkLabel dropboxSDKLinkLabel;
         private System.Windows.Forms.LinkLabel eveMarketDataLinkLabel;
         private System.Windows.Forms.LinkLabel oneDriveSDKLinkLabel;
         private System.Windows.Forms.LinkLabel bitbucketLinkLabel;

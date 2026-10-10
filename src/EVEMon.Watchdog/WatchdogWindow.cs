@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 
 namespace EVEMon.Watchdog
@@ -74,9 +73,7 @@ namespace EVEMon.Watchdog
         private void StartEVEMonProcess()
         {
             // Find the expected path for 'EVEMon.exe'
-            string path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            if (path == null)
-                return;
+            string path = AppContext.BaseDirectory;
 
             string executable = Path.Combine(path, "EVEMon.exe");
 

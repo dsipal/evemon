@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using EVEMon.Common.Constants;
+using EVEMon.Common.Esi;
 using EVEMon.Common.Enumerations.CCPAPI;
 using EVEMon.Common.Helpers;
 using EVEMon.Common.Models.Collections;
@@ -171,8 +172,8 @@ namespace EVEMon.Common.Models
 
             s_queryPending = true;
 
-            EveMonClient.APIProviders.CurrentProvider
-                .QueryMethodAsync<SerializableAPIEveFactionalWarfareStats>(CCPAPIGenericMethods.EVEFactionalWarfareStats, OnUpdated);
+            EsiPublicQueries.QueryAsync<SerializableAPIEveFactionalWarfareStats>(EsiPublicQueries.FactionalWarfareStatsAsync,
+                OnUpdated);
         }
 
         /// <summary>

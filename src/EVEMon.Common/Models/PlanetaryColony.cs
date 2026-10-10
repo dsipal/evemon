@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using EVEMon.Common.Data;
+using EVEMon.Common.Esi;
 using EVEMon.Common.Enumerations.CCPAPI;
 using EVEMon.Common.Serialization.Eve;
 
@@ -164,14 +165,14 @@ namespace EVEMon.Common.Models
             m_queryPinsPending = true;
 
             // Find the API key associated with planeatry pins
-            APIKey apiKey = Character.Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.AssetList);
+            ESIKey esiKey = Character.Identity.FindESIKeyWithAccess(CCPAPIGenericMethods.PlanetaryColonies);
 
             // Quits if access denied
-            if (apiKey == null)
+            if (esiKey == null)
                 return;
 
-            EveMonClient.APIProviders.CurrentProvider.QueryMethodAsync<SerializableAPIPlanetaryPins>(
-                CCPAPIGenericMethods.PlanetaryPins, apiKey.ID, apiKey.VerificationCode, Character.CharacterID, PlanetID,
+            EsiQueries.QueryAsync<SerializableAPIPlanetaryPins>(
+                CCPAPIGenericMethods.PlanetaryPins, esiKey, Character.CharacterID, PlanetID,
                 OnPlanetaryPinsUpdated);
         }
 
@@ -187,14 +188,14 @@ namespace EVEMon.Common.Models
             m_queryRoutesPending = true;
 
             // Find the API key associated with planeatry pins
-            APIKey apiKey = Character.Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.AssetList);
+            ESIKey esiKey = Character.Identity.FindESIKeyWithAccess(CCPAPIGenericMethods.PlanetaryColonies);
 
             // Quits if access denied
-            if (apiKey == null)
+            if (esiKey == null)
                 return;
 
-            EveMonClient.APIProviders.CurrentProvider.QueryMethodAsync<SerializableAPIPlanetaryRoutes>(
-                CCPAPIGenericMethods.PlanetaryRoutes, apiKey.ID, apiKey.VerificationCode, Character.CharacterID, PlanetID,
+            EsiQueries.QueryAsync<SerializableAPIPlanetaryRoutes>(
+                CCPAPIGenericMethods.PlanetaryRoutes, esiKey, Character.CharacterID, PlanetID,
                 OnPlanetaryRoutesUpdated);
         }
 
@@ -210,14 +211,14 @@ namespace EVEMon.Common.Models
             m_queryLinksPending = true;
 
             // Find the API key associated with planeatry pins
-            APIKey apiKey = Character.Identity.FindAPIKeyWithAccess(CCPAPICharacterMethods.AssetList);
+            ESIKey esiKey = Character.Identity.FindESIKeyWithAccess(CCPAPIGenericMethods.PlanetaryColonies);
 
             // Quits if access denied
-            if (apiKey == null)
+            if (esiKey == null)
                 return;
 
-            EveMonClient.APIProviders.CurrentProvider.QueryMethodAsync<SerializableAPIPlanetaryLinks>(
-                CCPAPIGenericMethods.PlanetaryLinks, apiKey.ID, apiKey.VerificationCode, Character.CharacterID, PlanetID,
+            EsiQueries.QueryAsync<SerializableAPIPlanetaryLinks>(
+                CCPAPIGenericMethods.PlanetaryLinks, esiKey, Character.CharacterID, PlanetID,
                 OnPlanetaryLinksUpdated);
         }
 
