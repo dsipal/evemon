@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using ICSharpCode.SharpZipLib.Zip;
@@ -41,6 +42,10 @@ namespace EVEMon.InstallBuilder
             if (!versionOnly && PublishEVEMon() != 0)
                 return 1;
 
+            // Sign the published binaries before they are packaged (no-op unless signing is configured)
+            if (!versionOnly && SignPublishedFiles() != 0)
+                return 1;
+
             if (!HasVersion())
                 return 1;
 
@@ -70,6 +75,8 @@ namespace EVEMon.InstallBuilder
                     // Create an installer in the appropriate folder
                     Console.WriteLine("Starting Installer creation.");
                     if (BuildInstaller() != 0)
+                        return 1;
+                    if (SignFiles(Directory.GetFiles(InstallerDirectory, "*.exe")) != 0)
                         return 1;
                     Console.WriteLine("Installer creation finished.");
                     Console.WriteLine();
@@ -325,6 +332,104 @@ namespace EVEMon.InstallBuilder
                 Console.WriteLine();
                 return publishProcess.ExitCode;
             }
+        }
+
+        /// <summary>
+        /// Gets the signtool arguments (everything except the file list), e.g.
+        /// <c>sign /fd SHA256 /tr http://timestamp.acs.microsoft.com /td SHA256 /dlib ... /dmdf ...</c>.
+        /// Signing is skipped when the EVEMON_SIGN_ARGS environment variable is not set.
+        /// </summary>
+        private static string SignArguments => Environment.GetEnvironmentVariable("EVEMON_SIGN_ARGS");
+
+        /// <summary>
+        /// Gets the signtool executable; EVEMON_SIGNTOOL, otherwise 'signtool.exe' from the PATH.
+        /// </summary>
+        private static string SignToolExe
+            => Environment.GetEnvironmentVariable("EVEMON_SIGNTOOL") is string path && !String.IsNullOrWhiteSpace(path)
+                ? path
+                : "signtool.exe";
+
+        /// <summary>
+        /// Signs every executable and library in <see cref="SourceFilesDirectory"/> that has no Authenticode
+        /// signature yet. The .NET runtime files are already signed by Microsoft and are left untouched.
+        /// </summary>
+        /// <returns>0 on success or when signing is not configured.</returns>
+        private static int SignPublishedFiles()
+        {
+            if (String.IsNullOrWhiteSpace(SignArguments))
+            {
+                Console.WriteLine("Code signing : Not configured (set EVEMON_SIGN_ARGS) - binaries will be unsigned.");
+                Console.WriteLine();
+                return 0;
+            }
+
+            string[] unsigned = Directory.GetFiles(SourceFilesDirectory, "*", SearchOption.AllDirectories)
+                .Where(file => file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ||
+                               file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                .Where(file => !HasAuthenticodeSignature(file))
+                .ToArray();
+
+            return SignFiles(unsigned);
+        }
+
+        /// <summary>
+        /// Gets true if the file carries an embedded Authenticode signature (a non-empty PE certificate table).
+        /// </summary>
+        private static bool HasAuthenticodeSignature(string file)
+        {
+            using (FileStream stream = File.OpenRead(file))
+            using (PEReader peReader = new PEReader(stream))
+            {
+                try
+                {
+                    return peReader.PEHeaders.PEHeader?.CertificateTableDirectory.Size > 0;
+                }
+                catch (BadImageFormatException)
+                {
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Signs the specified files with signtool.
+        /// </summary>
+        /// <returns>0 on success or when signing is not configured; otherwise the signtool exit code.</returns>
+        private static int SignFiles(string[] files)
+        {
+            if (String.IsNullOrWhiteSpace(SignArguments) || !files.Any())
+                return 0;
+
+            // Keep each command line well under the Windows limit
+            const int BatchSize = 40;
+            for (int i = 0; i < files.Length; i += BatchSize)
+            {
+                string[] batch = files.Skip(i).Take(BatchSize).ToArray();
+                string param = String.Format(CultureInfo.InvariantCulture, "{0} {1}", SignArguments,
+                    String.Join(" ", batch.Select(file => "\"" + file + "\"")));
+
+                Console.WriteLine("Signing {0} file(s) : {1}", batch.Length,
+                    String.Join(", ", batch.Select(Path.GetFileName)));
+
+                ProcessStartInfo psi = new ProcessStartInfo(SignToolExe, param)
+                {
+                    WorkingDirectory = SolutionDirectory,
+                    UseShellExecute = false
+                };
+
+                using (Process signProcess = Process.Start(psi))
+                {
+                    signProcess.WaitForExit();
+                    if (signProcess.ExitCode != 0)
+                    {
+                        Console.WriteLine("signtool exited with errors.");
+                        return signProcess.ExitCode;
+                    }
+                }
+            }
+
+            Console.WriteLine();
+            return 0;
         }
 
         /// <summary>

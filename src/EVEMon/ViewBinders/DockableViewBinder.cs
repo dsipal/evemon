@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace EVEMon.Clients.Winforms.ViewBinders
+namespace EVEMon.ViewBinders
 {
 	public static class DockableViewBinder
 	{

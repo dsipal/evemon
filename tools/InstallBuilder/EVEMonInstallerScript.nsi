@@ -267,7 +267,12 @@ Section "Install EVEMon"
 
 	lbl_noLegacyUninstall:
 	SetOutPath "$INSTDIR"
-	File /r /x *vshost* /x *.config "${SOURCEDIR}\*.*" 
+
+	# Assemblies shipped by earlier versions that are no longer part of EVEMon
+	Delete "$INSTDIR\EVEMon.Clients.Winforms.dll"
+	Delete "$INSTDIR\EVEMon.Clients.Winforms.pdb"
+
+	File /r /x *vshost* /x *.config "${SOURCEDIR}\*.*"
 
 	WriteUninstaller "$INSTDIR\uninstall.exe"
 

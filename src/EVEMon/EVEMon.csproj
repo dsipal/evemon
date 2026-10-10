@@ -37,7 +37,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\EVEMon.Clients.Winforms\EVEMon.Clients.Winforms.csproj" />
     <ProjectReference Include="..\..\IO.Swagger\IO.Swagger.csproj" />
     <ProjectReference Include="..\EVEMon.Common\EVEMon.Common.csproj" />
     <ProjectReference Include="..\EVEMon.LogitechG15\EVEMon.LogitechG15.csproj" />

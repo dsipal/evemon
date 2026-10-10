@@ -48,8 +48,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PatchXmlCreator", "tools\Pa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IO.Swagger", "IO.Swagger\IO.Swagger.csproj", "{B2580BE4-CDE5-49E7-B929-BDACCCEBF019}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EVEMon.Clients.Winforms", "EVEMon.Clients.Winforms\EVEMon.Clients.Winforms.csproj", "{449EE2F8-179A-42D4-A0F0-9A4C925C0D11}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -135,12 +133,6 @@ Global
 		{B2580BE4-CDE5-49E7-B929-BDACCCEBF019}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B2580BE4-CDE5-49E7-B929-BDACCCEBF019}.Snapshot|Any CPU.ActiveCfg = Snapshot|Any CPU
 		{B2580BE4-CDE5-49E7-B929-BDACCCEBF019}.Snapshot|Any CPU.Build.0 = Snapshot|Any CPU
-		{449EE2F8-179A-42D4-A0F0-9A4C925C0D11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{449EE2F8-179A-42D4-A0F0-9A4C925C0D11}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{449EE2F8-179A-42D4-A0F0-9A4C925C0D11}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{449EE2F8-179A-42D4-A0F0-9A4C925C0D11}.Release|Any CPU.Build.0 = Release|Any CPU
-		{449EE2F8-179A-42D4-A0F0-9A4C925C0D11}.Snapshot|Any CPU.ActiveCfg = Snapshot|Any CPU
-		{449EE2F8-179A-42D4-A0F0-9A4C925C0D11}.Snapshot|Any CPU.Build.0 = Snapshot|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -159,6 +151,5 @@ Global
 		{9366D54A-B516-4A1D-987B-B1BCE31D2A72} = {9AB16E7E-E520-4444-8E8E-165129CC93B3}
 		{E6907BAD-CDF4-4B3C-AF2E-E854D2E2D959} = {9AB16E7E-E520-4444-8E8E-165129CC93B3}
 		{B2580BE4-CDE5-49E7-B929-BDACCCEBF019} = {8C15906A-841B-462D-8F1C-1CE6FC028615}
-		{449EE2F8-179A-42D4-A0F0-9A4C925C0D11} = {34C45B9C-5355-4FD8-A14E-70DE701DC615}
 	EndGlobalSection
 EndGlobal
