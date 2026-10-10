@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<evemon xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <releases>
+    <release>
+      <date>10 October 2026</date>
+      <version>4.0.0.4715</version>
+      <md5>12f03bae0a6f0749510dbfcb453fe68d</md5>
+      <url>https://github.com/dsipal/evemon/releases/tag/v4.0.0</url>
+      <autopatchurl>https://github.com/dsipal/evemon/releases/download/v4.0.0/EVEMon-install-4.0.0.exe</autopatchurl>
+      <autopatchargs>/S /AUTORUN</autopatchargs>
+      <additionalargs>/D=%EVEMON_EXECUTABLE_PATH%</additionalargs>
+      <message><![CDATA[# EVEMon 4.0.0
+
+## Breaking changes
+- EVE API keys are replaced by EVE SSO: add your characters again with File > Add Character.
+  Your characters, plans and settings are kept.
+- EVEMon now runs on .NET 10 and ships with its own runtime (no .NET install needed).
+- Dropbox and OneDrive settings sync were removed (Google Drive remains).
+
+## New
+- All character and corporation data comes from ESI.
+- Portraits and icons load from the current EVE image server.
+]]></message>
+    </release>
+  </releases>
+</evemon>
